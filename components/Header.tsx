@@ -48,7 +48,7 @@ const Header: React.FC = () => {
     borderBottom: '2px solid #d6b209',
   };
 
-  const linkClasses = "px-3 py-2 rounded-md text-sm md:text-lg font-medium text-gray-200 hover:text-white hover:bg-gray-700 transition-colors";
+  const linkClasses = "px-3 py-2 rounded-md text-sm md:text-base font-medium text-gray-200 hover:text-white hover:bg-gray-700 transition-colors";
   const mobileLinkClasses = "block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-700 transition-colors";
 
   return (
@@ -57,19 +57,19 @@ const Header: React.FC = () => {
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
             <NavLink to="/" className="flex-shrink-0 flex items-center gap-3">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#d6b209]">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#d6b209]">
                 
                 <img
                   src="/coat.svg"
                   alt="Dominicanos Unidos Baltimore emblem"
-                  className="h-12 w-12 object-contain"
+                  className="h-10 w-10 object-contain"
                 />
               </span>
               <span className="flex flex-col leading-tight">
-                <span className="text-white text-lg sm:text-xl font-bold tracking-wide">
+                <span className="text-white text-lg sm:text-lg font-bold tracking-wide">
                   DOMINICANOS UNIDOS
                 </span>
-                <span className="text-xs sm:text-sm text-gray-300 uppercase tracking-[0.35em]">
+                <span className="text-xs sm:text-xs text-gray-300 uppercase tracking-[0.35em]">
                   DE Baltimore
                 </span>
               </span>
