@@ -18,7 +18,7 @@ const content = {
         amount: '$25',
         name: 'Cultural Seed',
         description: 'Supports materials for our youth cultural education programs.',
-        color: 'text-[#012d62]',
+        color: 'text-[#1b68c1]',
       },
       {
         amount: '$50',

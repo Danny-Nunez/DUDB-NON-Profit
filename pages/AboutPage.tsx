@@ -137,7 +137,7 @@ const AboutPage: React.FC = () => {
     <PageWrapper title={copy.title} subtitle={copy.subtitle}>
       <div className="space-y-12 max-w-5xl mx-auto text-lg text-gray-300">
         <div className="bg-gray-900/60 border border-[#012d62]/30 backdrop-blur-sm p-8 rounded-2xl shadow-xl shadow-black/40">
-          <h2 className="text-3xl font-bold text-[#012d62] mb-4 uppercase tracking-widest">{copy.missionTitle}</h2>
+          <h2 className="text-3xl font-bold text-[#1b68c1] mb-4 uppercase tracking-widest">{copy.missionTitle}</h2>
           <p>{copy.missionDescription}</p>
         </div>
 
