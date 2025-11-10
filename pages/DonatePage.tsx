@@ -3,6 +3,9 @@ import React from 'react';
 import PageWrapper from '../components/PageWrapper';
 import { useLanguage } from '../contexts/LanguageContext';
 
+const COLLECT_CHECKOUT_URL =
+  'https://collectcheckout.com/cart/checkout.php?cart_configuration_id=0f25b9e7-7011-49f5-bf8b-e610fe5b29cd';
+
 const content = {
   en: {
     title: 'Support Our Mission',
@@ -33,7 +36,7 @@ const content = {
     closing:
       'Every dollar helps strengthen our community. Join us in building a brighter future.',
     donateButton: 'Donate Now',
-    donateAlert: 'Redirecting to donation platform... (Demo)',
+    donateHelper: 'You’ll be redirected to our secure Collect Checkout page.',
   },
   es: {
     title: 'Apoya Nuestra Misión',
@@ -64,14 +67,13 @@ const content = {
     closing:
       'Cada dólar fortalece a nuestra comunidad. Únete a nosotros para construir un futuro más brillante.',
     donateButton: 'Haz Tu Donación',
-    donateAlert: 'Redirigiendo a la plataforma de donaciones... (Demostración)',
+    donateHelper: 'Serás redirigido a nuestra página segura de Collect Checkout.',
   },
 } as const;
 
 const DonatePage: React.FC = () => {
   const { language } = useLanguage();
   const copy = content[language];
-
   return (
     <PageWrapper title={copy.title} subtitle={copy.subtitle}>
       <div className="max-w-4xl mx-auto">
@@ -92,12 +94,15 @@ const DonatePage: React.FC = () => {
 
           <p className="text-lg text-gray-300 mb-8">{copy.closing}</p>
 
-          <button
-            className="w-full sm:w-auto inline-flex items-center justify-center px-12 py-4 border border-transparent text-lg font-medium rounded-md text-white bg-[#ce1226] hover:bg-[#a70e1f] transition-colors shadow-lg shadow-[#ce1226]/40"
-            onClick={() => alert(copy.donateAlert)}
+          <a
+            href={COLLECT_CHECKOUT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full sm:w-auto items-center justify-center rounded-xl px-12 py-4 text-lg font-semibold text-white bg-[#ce1226] hover:bg-[#a70e1f] transition-colors shadow-lg shadow-[#ce1226]/40"
           >
             {copy.donateButton}
-          </button>
+          </a>
+          <p className="mt-4 text-xs text-gray-500">{copy.donateHelper}</p>
         </div>
       </div>
     </PageWrapper>
