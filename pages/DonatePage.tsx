@@ -49,7 +49,7 @@ const content = {
         amount: '$25',
         name: 'Semilla Cultural',
         description: 'Apoya materiales para nuestros programas de educación cultural juvenil.',
-        color: 'text-[#012d62]',
+        color: 'text-[#1b68c1]',
       },
       {
         amount: '$50',
