@@ -14,7 +14,7 @@
       "node",
       "@vercel/node"
     ],
-    "moduleResolution": "node16",
+    "moduleResolution": "node",
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
