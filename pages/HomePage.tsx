@@ -1,96 +1,31 @@
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { pageDefaults } from '../lib/pageDefaults';
+import { usePageContent } from '../hooks/usePageContent';
 
 const VIDEO_SOURCES = ['/dance.mp4', '/group.mp4'];
 const FADE_DURATION_MS = 1500;
 
-const content = {
-  en: {
-    hero: {
-      lineOne: 'Uniting Our Community,',
-      lineTwo: 'Strengthening Our Future.',
-      description:
-        'Dominicans United of Baltimore is a non-profit organization that promotes culture, art, social economics, and Dominican spiritual entrepreneurship in Baltimore and the surrounding areas. The organization is dedicated to fostering growth, support, and unity.',
-      primaryCta: 'Learn More',
-      secondaryCta: 'Support Us',
-    },
-    featuresHeading: 'Our Commitment',
-    featuresSubtitle: 'We focus on three core pillars to uplift our community.',
-    features: [
-      {
-        title: 'Business Empowerment',
-        description:
-          'Delivering resources, networking opportunities, and a platform for Dominican-owned businesses to thrive.',
-      },
-      {
-        title: 'Community Support',
-        description:
-          'Organizing cultural events, workshops, and support programs that celebrate our heritage and serve our people.',
-      },
-      {
-        title: 'Cultural Preservation',
-        description:
-          'Keeping our rich traditions alive through festivals, music, food, and educational events for all ages.',
-      },
-    ],
-    newsletter: {
-      eyebrow: 'Stay Connected',
-      heading: 'Subscribe to Our Newsletter',
-      description:
-        'Receive updates on upcoming events, business resources, and new opportunities to get involved with the Dominican community in Baltimore.',
-      placeholder: 'Enter your email address',
-      cta: 'Subscribe',
-      privacy: 'We respect your inbox. Expect 1–2 emails per month with community highlights.',
-    },
-  },
-  es: {
-    hero: {
-      lineOne: 'Uniendo Nuestra Comunidad,',
-      lineTwo: 'Fortaleciendo Nuestro Futuro.',
-      description:
-        'Dominicanos Unidos de Baltimore es una organización sin fines de lucro que promueve la cultura, el arte, la economía social y el emprendimiento espiritual dominicano en Baltimore y sus alrededores. Estamos dedicados a fomentar el crecimiento, el apoyo y la unidad.',
-      primaryCta: 'Conoce Más',
-      secondaryCta: 'Apóyanos',
-    },
-    featuresHeading: 'Nuestro Compromiso',
-    featuresSubtitle: 'Nos enfocamos en tres pilares fundamentales para impulsar a nuestra comunidad.',
-    features: [
-      {
-        title: 'Impulso Empresarial',
-        description:
-          'Ofrecemos recursos, oportunidades de networking y una plataforma para que los negocios dominicanos prosperen.',
-      },
-      {
-        title: 'Apoyo Comunitario',
-        description:
-          'Organizamos eventos culturales, talleres y programas de apoyo que celebran nuestra herencia y sirven a nuestra gente.',
-      },
-      {
-        title: 'Preservación Cultural',
-        description:
-          'Mantenemos vivas nuestras tradiciones a través de festivales, música, gastronomía y actividades educativas para todas las edades.',
-      },
-    ],
-    newsletter: {
-      eyebrow: 'Mantente Conectado',
-      heading: 'Suscríbete a Nuestro Boletín',
-      description:
-        'Recibe noticias sobre eventos, recursos para negocios y nuevas oportunidades para involucrarte con la comunidad dominicana en Baltimore.',
-      placeholder: 'Ingresa tu correo electrónico',
-      cta: 'Suscribirme',
-      privacy: 'Respetamos tu bandeja de entrada. Enviamos 1-2 correos al mes con lo más destacado de la comunidad.',
-    },
-  },
-} as const;
-
 const HomePage: React.FC = () => {
   const { language } = useLanguage();
-  const copy = content[language];
+  const defaultContent = pageDefaults.home;
+  const { content } = usePageContent('home', defaultContent);
+  const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
+  const defaultNewsletter = (defaultContent[language as keyof typeof defaultContent] as (typeof defaultContent)['en']).newsletter;
+  const newsletterCopy = {
+    ...defaultNewsletter,
+    ...(copy.newsletter ?? {}),
+  } as (typeof defaultNewsletter);
   const [activeVideo, setActiveVideo] = useState(0);
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const previousVideoRef = useRef<number | null>(null);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [newsletterError, setNewsletterError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [newsletterResult, setNewsletterResult] = useState<'success' | 'already' | null>(null);
 
   const handleVideoEnd = useCallback(
     (index: number) => {
@@ -133,6 +68,94 @@ const HomePage: React.FC = () => {
       }
     };
   }, [activeVideo]);
+
+  const handleToast = useCallback((type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  const newsletterButtonLabel = useMemo(() => {
+    if (newsletterStatus === 'submitting') {
+      return newsletterCopy.submitting ?? newsletterCopy.cta;
+    }
+    return newsletterCopy.cta;
+  }, [newsletterCopy.cta, newsletterCopy.submitting, newsletterStatus]);
+
+  const handleNewsletterSubmit = useCallback(
+    async (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      if (newsletterStatus === 'submitting') return;
+
+      const email = newsletterEmail.trim();
+      if (!email) {
+        setNewsletterStatus('error');
+        setNewsletterError(
+          language === 'en'
+            ? 'Please enter your email address to subscribe.'
+            : 'Por favor ingresa tu correo electrónico para suscribirte.',
+        );
+        handleToast('error', newsletterCopy.errorMessage);
+        return;
+      }
+
+      setNewsletterStatus('submitting');
+      setNewsletterError(null);
+      setNewsletterResult(null);
+
+      try {
+        const response = await fetch('/api/newsletter', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, language }),
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        console.log('Newsletter response', { status: response.status, payload });
+
+        const isAlreadySubscribed =
+          payload?.code === 'already_subscribed' ||
+          (typeof payload?.message === 'string' && payload.message.toLowerCase().includes('already'));
+        const requiresReactivation = payload?.code === 'reactivation_required';
+
+        if (requiresReactivation) {
+          setNewsletterStatus('error');
+          setNewsletterError(newsletterCopy.reactivationMessage);
+          setNewsletterResult(null);
+          handleToast('error', newsletterCopy.reactivationMessage);
+          return;
+        }
+
+        if (!response.ok && !isAlreadySubscribed) {
+          throw new Error(payload?.message ?? 'Request failed');
+        }
+
+        setNewsletterStatus('success');
+        setNewsletterResult(isAlreadySubscribed ? 'already' : 'success');
+        setNewsletterEmail('');
+        handleToast('success', isAlreadySubscribed ? newsletterCopy.alreadyMessage || newsletterCopy.successMessage : newsletterCopy.successMessage);
+      } catch (error) {
+        console.error('Newsletter subscription failed', error);
+        console.log('Newsletter state', {
+          email: newsletterEmail,
+          status: newsletterStatus,
+        });
+        setNewsletterStatus('error');
+        setNewsletterError(
+          error instanceof Error && error.message ? error.message : newsletterCopy.errorMessage,
+        );
+        setNewsletterResult(null);
+        handleToast('error', newsletterCopy.errorMessage);
+      }
+    },
+    [newsletterCopy.errorMessage, newsletterCopy.successMessage, newsletterCopy.alreadyMessage, newsletterCopy.reactivationMessage, language, newsletterEmail, newsletterStatus, handleToast],
+  );
 
   return (
     <div className="text-white bg-black min-h-screen">
@@ -214,33 +237,53 @@ const HomePage: React.FC = () => {
           <p className="text-xs uppercase tracking-[0.4em] text-[#d6b209]">{copy.newsletter.eyebrow}</p>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white">{copy.newsletter.heading}</h2>
           <p className="mt-4 text-lg text-gray-300">{copy.newsletter.description}</p>
-          <form
-            className="mt-10 flex flex-col sm:flex-row sm:justify-center gap-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              alert(language === 'en' ? 'Subscribed! (Demo)' : '¡Suscripción realizada! (Demostración)');
-            }}
-          >
+          <form className="mt-10 flex flex-col sm:flex-row sm:justify-center gap-4" onSubmit={handleNewsletterSubmit}>
             <label htmlFor="newsletter-email" className="sr-only">
               {copy.newsletter.placeholder}
             </label>
             <input
               id="newsletter-email"
               type="email"
-              required
               placeholder={copy.newsletter.placeholder}
+              value={newsletterEmail}
+              onChange={(event) => setNewsletterEmail(event.target.value)}
+              required
               className="w-full sm:w-2/3 rounded-xl border border-[#d6b209]/40 bg-black/60 px-6 py-3 text-white placeholder-gray-500 focus:border-[#d6b209] focus:ring-2 focus:ring-[#d6b209]/60 transition"
             />
             <button
               type="submit"
-              className="inline-flex items-center justify-center rounded-xl bg-[#d6b209] px-6 py-3 text-base font-semibold text-black shadow-lg shadow-[#d6b209]/30 hover:bg-[#b79807] transition"
+              disabled={newsletterStatus === 'submitting'}
+              className="inline-flex items-center justify-center rounded-xl bg-[#d6b209] px-6 py-3 text-base font-semibold text-black shadow-lg shadow-[#d6b209]/30 hover:bg-[#b79807] transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {copy.newsletter.cta}
+              {newsletterButtonLabel}
             </button>
           </form>
+          {newsletterStatus === 'error' && newsletterError && (
+            <p className="mt-4 text-sm text-[#ffb3b3]">{newsletterError}</p>
+          )}
+          {newsletterStatus === 'success' && newsletterResult === 'success' && (
+            <p className="mt-4 text-sm text-[#d6b209]">{newsletterCopy.successTitle}</p>
+          )}
+          {newsletterStatus === 'success' && newsletterResult === 'already' && (
+            <p className="mt-4 text-sm text-[#d6b209]">{newsletterCopy.alreadyTitle}</p>
+          )}
+          {newsletterStatus === 'error' && newsletterError === copy.newsletter.reactivationMessage && (
+            <p className="mt-4 text-sm text-[#ffb3b3]">{newsletterCopy.reactivationTitle}</p>
+          )}
           <p className="mt-6 text-xs text-gray-400">{copy.newsletter.privacy}</p>
         </div>
       </div>
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-40 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
+            toast.type === 'success'
+              ? 'bg-[#13223e]/95 border-[#d6b209]/40 text-[#fef6cc]'
+              : 'bg-[#3a1515]/95 border-[#ce1226]/40 text-[#ffdada]'
+          }`}
+        >
+          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 };

@@ -40,6 +40,7 @@ The interface is bilingual, allowing visitors to switch between English and Span
 ### Prerequisites
 
 - Node.js 18+
+- AWS credentials with access to the `dominicanos-unidos` S3 bucket
 
 ### Installation
 
@@ -53,7 +54,25 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173/` to view the app.
+Visit `http://localhost:3000/` to view the app. The development server also serves `/api/events`, which proxies requests to your S3 bucket using the credentials in `.env.local`.
+
+> Tip: `npx vercel dev` emulates both the Vite build and the serverless API if you prefer using Vercel’s tooling locally.
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+### DynamoDB Setup (one-time)
+
+After configuring your AWS credentials, create the content table:
+
+```bash
+npm run create:table
+```
+
+This script provisions a table named `dominicanos_unidos_content` (or the value in `DYNAMODB_TABLE_NAME`) with `PK` and `SK` as the primary keys.
 
 ## 🤝 Contributing
 

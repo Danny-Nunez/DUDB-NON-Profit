@@ -1,0 +1,428 @@
+export type PageSlug =
+  | 'home'
+  | 'about'
+  | 'donate'
+  | 'businesses'
+  | 'events'
+  | 'contact'
+  | 'footer';
+
+export const pageDefaults = {
+  home: {
+    en: {
+      hero: {
+        lineOne: 'Uniting Our Community,',
+        lineTwo: 'Strengthening Our Future.',
+        description:
+          'Dominicans United of Baltimore is a non-profit organization that promotes culture, art, social economics, and Dominican spiritual entrepreneurship in Baltimore and the surrounding areas. The organization is dedicated to fostering growth, support, and unity.',
+        primaryCta: 'Learn More',
+        secondaryCta: 'Support Us',
+      },
+      featuresHeading: 'Our Commitment',
+      featuresSubtitle: 'We focus on three core pillars to uplift our community.',
+      features: [
+        {
+          title: 'Business Empowerment',
+          description:
+            'Delivering resources, networking opportunities, and a platform for Dominican-owned businesses to thrive.',
+        },
+        {
+          title: 'Community Support',
+          description:
+            'Organizing cultural events, workshops, and support programs that celebrate our heritage and serve our people.',
+        },
+        {
+          title: 'Cultural Preservation',
+          description:
+            'Keeping our rich traditions alive through festivals, music, food, and educational events for all ages.',
+        },
+      ],
+      newsletter: {
+        eyebrow: 'Stay Connected',
+        heading: 'Subscribe to Our Newsletter',
+        description:
+          'Receive updates on upcoming events, business resources, and new opportunities to get involved with the Dominican community in Baltimore.',
+        placeholder: 'Enter your email address',
+        cta: 'Subscribe',
+        privacy: 'We respect your inbox. Expect 1–2 emails per month with community highlights.',
+        successTitle: 'Subscription confirmed! 🎉',
+        successMessage: 'Thanks for joining our newsletter. Look for our next update in your inbox.',
+        errorTitle: 'Unable to subscribe right now.',
+        errorMessage: 'Please try again later or email us so we can add you manually.',
+        submitting: 'Subscribing…',
+        alreadyTitle: 'You are already subscribed.',
+        alreadyMessage: 'Looks like you are already on our list. We appreciate your continued support!',
+        reactivationTitle: 'Reactivation required.',
+        reactivationMessage:
+          'This email previously unsubscribed. Please use a MailerLite form or contact us so we can re-add you.',
+      },
+    },
+    es: {
+      hero: {
+        lineOne: 'Uniendo Nuestra Comunidad,',
+        lineTwo: 'Fortaleciendo Nuestro Futuro.',
+        description:
+          'Dominicanos Unidos de Baltimore es una organización sin fines de lucro que promueve la cultura, el arte, la economía social y el emprendimiento espiritual dominicano en Baltimore y sus alrededores. Estamos dedicados a fomentar el crecimiento, el apoyo y la unidad.',
+        primaryCta: 'Conoce Más',
+        secondaryCta: 'Apóyanos',
+      },
+      featuresHeading: 'Nuestro Compromiso',
+      featuresSubtitle: 'Nos enfocamos en tres pilares fundamentales para impulsar a nuestra comunidad.',
+      features: [
+        {
+          title: 'Impulso Empresarial',
+          description:
+            'Ofrecemos recursos, oportunidades de networking y una plataforma para que los negocios dominicanos prosperen.',
+        },
+        {
+          title: 'Apoyo Comunitario',
+          description:
+            'Organizamos eventos culturales, talleres y programas de apoyo que celebran nuestra herencia y sirven a nuestra gente.',
+        },
+        {
+          title: 'Preservación Cultural',
+          description:
+            'Mantenemos vivas nuestras tradiciones a través de festivales, música, gastronomía y actividades educativas para todas las edades.',
+        },
+      ],
+      newsletter: {
+        eyebrow: 'Mantente Conectado',
+        heading: 'Suscríbete a Nuestro Boletín',
+        description:
+          'Recibe noticias sobre eventos, recursos para negocios y nuevas oportunidades para involucrarte con la comunidad dominicana en Baltimore.',
+        placeholder: 'Ingresa tu correo electrónico',
+        cta: 'Suscribirme',
+        privacy: 'Respetamos tu bandeja de entrada. Enviamos 1-2 correos al mes con lo más destacado de la comunidad.',
+        successTitle: '¡Suscripción confirmada! 🎉',
+        successMessage: 'Gracias por unirte a nuestro boletín. Espera nuestras próximas novedades en tu correo.',
+        errorTitle: 'No pudimos suscribirte.',
+        errorMessage: 'Intenta nuevamente más tarde o envíanos un correo para agregarte manualmente.',
+        submitting: 'Suscribiendo…',
+        alreadyTitle: 'Ya estás suscrito.',
+        alreadyMessage: 'Parece que ya estás en nuestra lista. ¡Gracias por seguir apoyándonos!',
+        reactivationTitle: 'Se requiere reactivación.',
+        reactivationMessage:
+          'Este correo se dio de baja previamente. Usa un formulario de MailerLite o contáctanos para volver a agregarte.',
+      },
+    },
+  },
+  about: {
+    en: {
+      title: 'About Us',
+      subtitle: 'Our Story, Our Mission, Our Vision',
+      missionTitle: 'Our Mission',
+      missionDescription:
+        'To unite, empower, and uplift the Dominican community in Baltimore by fostering economic growth, providing essential support services, and celebrating our vibrant cultural heritage. We strive to create a network of solidarity where every member has the opportunity to succeed and thrive.',
+      visionTitle: 'Our Vision',
+      visionDescription:
+        "We envision a future where the Dominican community is a recognized and influential force in Baltimore's economic and cultural landscape. A future where our businesses are prosperous, our families are strong, and our culture is a celebrated part of the city's diverse tapestry.",
+      historyTitle: 'Our History',
+      historyDescription:
+        'Founded in 2023 by a group of passionate community leaders and business owners, Dominicanos Unidos Baltimore was born from a shared desire to address the needs of our growing community. We saw the immense talent, resilience, and entrepreneurial spirit of our people and wanted to create an organization that could amplify our collective voice and create tangible opportunities for success. From humble beginnings organizing small cultural gatherings, we have grown into a central resource for Dominican businesses and families across the region.',
+      leadershipTag: 'Our Leadership',
+      boardHeading: 'Board of Directors',
+      boardDescription:
+        'A diverse team of leaders committed to advancing the growth, culture, and well-being of the Dominican community in Baltimore.',
+      boardMembers: [
+        {
+          name: 'Isabella Rodriguez',
+          role: 'President & Co-Founder',
+          description:
+            'A visionary leader and successful restaurateur, Isabella founded the organization to create the community support she wished she had when starting her business.',
+          imageUrl: 'https://picsum.photos/400/400?image=1027',
+        },
+        {
+          name: 'Carlos Jimenez',
+          role: 'Vice President',
+          description:
+            'With a background in finance and community development, Carlos oversees our strategic partnerships and financial health, ensuring our long-term impact.',
+          imageUrl: 'https://picsum.photos/400/400?image=1005',
+        },
+        {
+          name: 'Sofia Reyes',
+          role: 'Secretary',
+          description:
+            'A community organizer at heart, Sofia manages our communications and outreach, ensuring our message reaches every corner of the community.',
+          imageUrl: 'https://picsum.photos/400/400?image=1011',
+        },
+        {
+          name: 'Mateo Castillo',
+          role: 'Treasurer',
+          description:
+            "An experienced accountant, Mateo is dedicated to maintaining the organization's fiscal transparency and responsibility.",
+          imageUrl: 'https://picsum.photos/400/400?image=836',
+        },
+        {
+          name: 'Elena Vargas',
+          role: 'Director of Business Development',
+          description:
+            'Elena is passionate about helping Dominican entrepreneurs succeed. She leads our business workshops and mentorship programs.',
+          imageUrl: 'https://picsum.photos/400/400?image=823',
+        },
+        {
+          name: 'Javier Peralta',
+          role: 'Director of Cultural Events',
+          description:
+            'Javier is the creative force behind our vibrant cultural festivals, concerts, and community gatherings, celebrating our heritage with pride.',
+          imageUrl: 'https://picsum.photos/400/400?image=64',
+        },
+      ],
+    },
+    es: {
+      title: 'Sobre Nosotros',
+      subtitle: 'Nuestra Historia, Nuestra Misión, Nuestra Visión',
+      missionTitle: 'Nuestra Misión',
+      missionDescription:
+        'Unir, empoderar y elevar a la comunidad dominicana en Baltimore fomentando el crecimiento económico, brindando servicios esenciales y celebrando nuestro vibrante patrimonio cultural. Trabajamos para crear una red de solidaridad donde cada miembro tenga la oportunidad de prosperar.',
+      visionTitle: 'Nuestra Visión',
+      visionDescription:
+        'Visualizamos un futuro en el que la comunidad dominicana sea una fuerza reconocida e influyente en el panorama económico y cultural de Baltimore. Un futuro donde nuestros negocios prosperen, nuestras familias sean fuertes y nuestra cultura sea una pieza celebrada del diverso tejido de la ciudad.',
+      historyTitle: 'Nuestra Historia',
+      historyDescription:
+        'Fundada en 2023 por un grupo de líderes comunitarios y dueños de negocios apasionados, Dominicanos Unidos de Baltimore nació del deseo de atender las necesidades de nuestra creciente comunidad. Reconocimos el talento, la resiliencia y el espíritu emprendedor de nuestra gente y decidimos crear una organización que amplificara nuestra voz colectiva y generara oportunidades tangibles de éxito. De comienzos humildes organizando pequeños encuentros culturales, nos hemos convertido en un recurso central para los negocios y las familias dominicanas en toda la región.',
+      leadershipTag: 'Nuestro Liderazgo',
+      boardHeading: 'Junta Directiva',
+      boardDescription:
+        'Un equipo diverso de líderes comprometidos con impulsar el crecimiento, la cultura y el bienestar de la comunidad dominicana en Baltimore.',
+      boardMembers: [
+        {
+          name: 'Isabella Rodriguez',
+          role: 'Presidenta y Cofundadora',
+          description:
+            'Líder visionaria y exitosa restaurantera, Isabella fundó la organización para crear el apoyo comunitario que necesitó cuando inició su negocio.',
+          imageUrl: 'https://picsum.photos/400/400?image=1027',
+        },
+        {
+          name: 'Carlos Jimenez',
+          role: 'Vicepresidente',
+          description:
+            'Con experiencia en finanzas y desarrollo comunitario, Carlos supervisa nuestras alianzas estratégicas y salud financiera para asegurar nuestro impacto a largo plazo.',
+          imageUrl: 'https://picsum.photos/400/400?image=1005',
+        },
+        {
+          name: 'Sofia Reyes',
+          role: 'Secretaria',
+          description:
+            'Organizadora comunitaria de corazón, Sofía dirige nuestras comunicaciones y alcance, garantizando que nuestro mensaje llegue a toda la comunidad.',
+          imageUrl: 'https://picsum.photos/400/400?image=1011',
+        },
+        {
+          name: 'Mateo Castillo',
+          role: 'Tesorero',
+          description:
+            'Contador experimentado, Mateo se dedica a mantener la transparencia y responsabilidad fiscal de la organización.',
+          imageUrl: 'https://picsum.photos/400/400?image=836',
+        },
+        {
+          name: 'Elena Vargas',
+          role: 'Directora de Desarrollo Empresarial',
+          description:
+            'Elena se apasiona por ayudar a los emprendedores dominicanos a triunfar. Lidera nuestros talleres de negocios y programas de mentoría.',
+          imageUrl: 'https://picsum.photos/400/400?image=823',
+        },
+        {
+          name: 'Javier Peralta',
+          role: 'Director de Eventos Culturales',
+          description:
+            'Javier es la fuerza creativa detrás de nuestros festivales, conciertos y encuentros comunitarios, celebrando nuestra herencia con orgullo.',
+          imageUrl: 'https://picsum.photos/400/400?image=64',
+        },
+      ],
+    },
+  },
+  donate: {
+    en: {
+      title: 'Support Our Mission',
+      subtitle: 'Your contribution makes a difference.',
+      whyHeading: 'Why Your Donation Matters',
+      whyDescription:
+        'Dominicans United of Baltimore is a volunteer-driven organization. 100% of your donations go directly toward funding our community programs, business workshops, cultural events, and support services. Your generosity helps us provide scholarships, support local entrepreneurs, and preserve the rich culture of the Dominican Republic right here in Baltimore.',
+      tiers: [
+        {
+          amount: '$25',
+          name: 'Cultural Seed',
+          description: 'Supports materials for our youth cultural education programs.',
+          color: 'text-[#1b68c1]',
+        },
+        {
+          amount: '$50',
+          name: 'Business Boost',
+          description: 'Helps fund a workshop for a local Dominican entrepreneur.',
+          color: 'text-[#ce1226]',
+        },
+        {
+          amount: '$100',
+          name: 'Community Builder',
+          description: 'Contributes to the costs of organizing a major community event.',
+          color: 'text-[#d6b209]',
+        },
+      ],
+      closing: 'Every dollar helps strengthen our community. Join us in building a brighter future.',
+      donateButton: 'Donate Now',
+      donateHelper: 'You’ll be redirected to our secure Collect Checkout page.',
+    },
+    es: {
+      title: 'Apoya Nuestra Misión',
+      subtitle: 'Tu contribución marca la diferencia.',
+      whyHeading: 'Por Qué Tu Donación Importa',
+      whyDescription:
+        'Dominicanos Unidos de Baltimore es una organización impulsada por voluntarios. El 100% de tus donaciones se destina directamente a financiar nuestros programas comunitarios, talleres de negocios, eventos culturales y servicios de apoyo. Tu generosidad nos ayuda a ofrecer becas, apoyar a emprendedores locales y preservar la rica cultura dominicana aquí mismo en Baltimore.',
+      tiers: [
+        {
+          amount: '$25',
+          name: 'Semilla Cultural',
+          description: 'Apoya materiales para nuestros programas de educación cultural juvenil.',
+          color: 'text-[#1b68c1]',
+        },
+        {
+          amount: '$50',
+          name: 'Impulso Empresarial',
+          description: 'Ayuda a financiar un taller para un emprendedor dominicano local.',
+          color: 'text-[#ce1226]',
+        },
+        {
+          amount: '$100',
+          name: 'Constructor Comunitario',
+          description: 'Contribuye a los costos de organizar un gran evento comunitario.',
+          color: 'text-[#d6b209]',
+        },
+      ],
+      closing: 'Cada dólar fortalece a nuestra comunidad. Únete a nosotros para construir un futuro más brillante.',
+      donateButton: 'Haz Tu Donación',
+      donateHelper: 'Serás redirigido a nuestra página segura de Collect Checkout.',
+    },
+  },
+  businesses: {
+    en: {
+      title: 'Business Directory',
+      subtitle: 'Support our local Dominican-owned businesses.',
+    },
+    es: {
+      title: 'Directorio de Negocios',
+      subtitle: 'Apoya a nuestros negocios locales dirigidos por dominicanos.',
+    },
+  },
+  events: {
+    en: {
+      title: 'Community Events',
+      subtitle: 'Bringing our people together to celebrate and grow.',
+      fallbackDescription:
+        'Discover our latest gatherings, workshops, and cultural celebrations. Check back often for new highlights.',
+    },
+    es: {
+      title: 'Eventos Comunitarios',
+      subtitle: 'Uniendo a nuestra gente para celebrar y crecer.',
+      fallbackDescription:
+        'Descubre nuestros encuentros, talleres y celebraciones culturales más recientes. Vuelve pronto para ver nuevos momentos.',
+    },
+  },
+  contact: {
+    en: {
+      title: 'Get in Touch',
+      subtitle:
+        'We want to hear from you. Share your ideas, questions, or the ways we can support our community.',
+      infoTitle: 'Our Information',
+      infoDescription:
+        'We are passionate about connecting with the Dominican community in Baltimore and surrounding areas.',
+      infoFollow: 'Follow us on social media to learn about upcoming events and opportunities.',
+      infoLabels: {
+        email: 'Email',
+        phone: 'Phone',
+        location: 'Location',
+      },
+      infoValues: {
+        email: 'info@dominicanosunidos.org',
+        phone: '+1 (410) 555-0123',
+        location: 'Baltimore, Maryland',
+      },
+      form: {
+        nameLabel: 'Full Name',
+        namePlaceholder: 'Your name',
+        emailLabel: 'Email Address',
+        emailPlaceholder: 'name@example.com',
+        topicLabel: 'Topic',
+        topicPlaceholder: 'Select a topic',
+        topics: [
+          { value: 'volunteer', label: 'Volunteering' },
+          { value: 'partnerships', label: 'Partnerships & Sponsorships' },
+          { value: 'events', label: 'Cultural Events' },
+          { value: 'support', label: 'Services & Support' },
+          { value: 'other', label: 'Other' },
+        ],
+        messageLabel: 'Message',
+        messagePlaceholder: 'Tell us how we can help…',
+        submit: 'Send Message',
+        disclaimer: 'By submitting this form, you agree to be contacted by Dominicanos Unidos Baltimore.',
+        successTitle: 'Message sent successfully! 🎉',
+        successMessage: 'Thank you for reaching out. Our team will get back to you as soon as possible.',
+        errorTitle: 'Something went wrong.',
+        errorMessage: 'We were unable to send your message. Please try again later or email us directly.',
+        submitting: 'Sending…',
+      },
+    },
+    es: {
+      title: 'Ponte en Contacto',
+      subtitle:
+        'Queremos escuchar de ti. Comparte tus ideas, preguntas o formas en las que podemos apoyar a nuestra comunidad.',
+      infoTitle: 'Nuestra Información',
+      infoDescription:
+        'Nos apasiona conectar con la comunidad dominicana en Baltimore y sus alrededores.',
+      infoFollow: 'Síguenos en nuestras redes sociales para conocer eventos y oportunidades.',
+      infoLabels: {
+        email: 'Correo',
+        phone: 'Teléfono',
+        location: 'Ubicación',
+      },
+      infoValues: {
+        email: 'info@dominicanosunidos.org',
+        phone: '+1 (410) 555-0123',
+        location: 'Baltimore, Maryland',
+      },
+      form: {
+        nameLabel: 'Nombre Completo',
+        namePlaceholder: 'Tu nombre',
+        emailLabel: 'Correo Electrónico',
+        emailPlaceholder: 'nombre@correo.com',
+        topicLabel: 'Tema',
+        topicPlaceholder: 'Selecciona un tema',
+        topics: [
+          { value: 'volunteer', label: 'Voluntariado' },
+          { value: 'partnerships', label: 'Alianzas y Patrocinios' },
+          { value: 'events', label: 'Eventos Culturales' },
+          { value: 'support', label: 'Servicios y Ayuda' },
+          { value: 'other', label: 'Otro' },
+        ],
+        messageLabel: 'Mensaje',
+        messagePlaceholder: 'Cuéntanos cómo podemos ayudarte...',
+        submit: 'Enviar Mensaje',
+        disclaimer: 'Al enviar este formulario, aceptas ser contactado por Dominicanos Unidos Baltimore.',
+        successTitle: '¡Mensaje enviado con éxito! 🎉',
+        successMessage: 'Gracias por comunicarte. Nuestro equipo te responderá lo antes posible.',
+        errorTitle: 'Algo salió mal.',
+        errorMessage: 'No pudimos enviar tu mensaje. Intenta más tarde o escríbenos directamente.',
+        submitting: 'Enviando…',
+      },
+    },
+  },
+  footer: {
+    en: {
+      tagline: 'A non-profit organization dedicated to community empowerment.',
+      socialLinks: {
+        facebook: 'https://www.facebook.com',
+        instagram: 'https://www.instagram.com',
+        twitter: 'https://www.twitter.com',
+      },
+    },
+    es: {
+      tagline: 'Una organización sin fines de lucro dedicada al empoderamiento comunitario.',
+      socialLinks: {
+        facebook: 'https://www.facebook.com',
+        instagram: 'https://www.instagram.com',
+        twitter: 'https://www.twitter.com',
+      },
+    },
+  },
+} as const satisfies Record<PageSlug, unknown>;
+
+export type PageDefaults = typeof pageDefaults;
+

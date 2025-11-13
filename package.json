@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "create:table": "tsx scripts/create-table.ts",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -12,11 +13,17 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "@heroicons/react": "^2.2.0",
-    "react-router-dom": "^7.9.5"
+    "react-router-dom": "^7.9.5",
+    "@aws-sdk/client-s3": "^3.693.0",
+    "@aws-sdk/client-dynamodb": "^3.693.0",
+    "@aws-sdk/lib-dynamodb": "^3.693.0",
+    "@aws-sdk/s3-request-presigner": "^3.693.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "tsx": "^4.19.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

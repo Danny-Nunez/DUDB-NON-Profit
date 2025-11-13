@@ -1,88 +1,97 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-
-const content = {
-  en: {
-    title: 'Get in Touch',
-    subtitle:
-      'We want to hear from you. Share your ideas, questions, or the ways we can support our community.',
-    infoTitle: 'Our Information',
-    infoDescription:
-      'We are passionate about connecting with the Dominican community in Baltimore and surrounding areas.',
-    infoFollow: 'Follow us on social media to learn about upcoming events and opportunities.',
-    infoLabels: {
-      email: 'Email',
-      phone: 'Phone',
-      location: 'Location',
-    },
-    infoValues: {
-      email: 'info@dominicanosunidos.org',
-      phone: '+1 (410) 555-0123',
-      location: 'Baltimore, Maryland',
-    },
-    form: {
-      nameLabel: 'Full Name',
-      namePlaceholder: 'Your name',
-      emailLabel: 'Email Address',
-      emailPlaceholder: 'name@example.com',
-      topicLabel: 'Topic',
-      topicPlaceholder: 'Select a topic',
-      topics: [
-        { value: 'volunteer', label: 'Volunteering' },
-        { value: 'partnerships', label: 'Partnerships & Sponsorships' },
-        { value: 'events', label: 'Cultural Events' },
-        { value: 'support', label: 'Services & Support' },
-        { value: 'other', label: 'Other' },
-      ],
-      messageLabel: 'Message',
-      messagePlaceholder: 'Tell us how we can help…',
-      submit: 'Send Message',
-      disclaimer: 'By submitting this form, you agree to be contacted by Dominicanos Unidos Baltimore.',
-    },
-  },
-  es: {
-    title: 'Ponte en Contacto',
-    subtitle:
-      'Queremos escuchar de ti. Comparte tus ideas, preguntas o formas en las que podemos apoyar a nuestra comunidad.',
-    infoTitle: 'Nuestra Información',
-    infoDescription:
-      'Nos apasiona conectar con la comunidad dominicana en Baltimore y sus alrededores.',
-    infoFollow: 'Síguenos en nuestras redes sociales para conocer eventos y oportunidades.',
-    infoLabels: {
-      email: 'Correo',
-      phone: 'Teléfono',
-      location: 'Ubicación',
-    },
-    infoValues: {
-      email: 'info@dominicanosunidos.org',
-      phone: '+1 (410) 555-0123',
-      location: 'Baltimore, Maryland',
-    },
-    form: {
-      nameLabel: 'Nombre Completo',
-      namePlaceholder: 'Tu nombre',
-      emailLabel: 'Correo Electrónico',
-      emailPlaceholder: 'nombre@correo.com',
-      topicLabel: 'Tema',
-      topicPlaceholder: 'Selecciona un tema',
-      topics: [
-        { value: 'volunteer', label: 'Voluntariado' },
-        { value: 'partnerships', label: 'Alianzas y Patrocinios' },
-        { value: 'events', label: 'Eventos Culturales' },
-        { value: 'support', label: 'Servicios y Ayuda' },
-        { value: 'other', label: 'Otro' },
-      ],
-      messageLabel: 'Mensaje',
-      messagePlaceholder: 'Cuéntanos cómo podemos ayudarte...',
-      submit: 'Enviar Mensaje',
-      disclaimer: 'Al enviar este formulario, aceptas ser contactado por Dominicanos Unidos Baltimore.',
-    },
-  },
-} as const;
+import { pageDefaults } from '../lib/pageDefaults';
+import { usePageContent } from '../hooks/usePageContent';
 
 const ContactPage: React.FC = () => {
   const { language } = useLanguage();
-  const copy = content[language];
+  const defaultContent = pageDefaults.contact;
+  const { content } = usePageContent('contact', defaultContent);
+  const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
+
+  const [formValues, setFormValues] = useState({
+    name: '',
+    email: '',
+    topic: '',
+    message: '',
+  });
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const isSubmitting = status === 'submitting';
+
+  const buttonLabel = useMemo(() => {
+    if (isSubmitting) {
+      return copy.form.submitting ?? copy.form.submit;
+    }
+    return copy.form.submit;
+  }, [copy.form.submit, copy.form.submitting, isSubmitting]);
+
+  const resetForm = () => {
+    setFormValues({ name: '', email: '', topic: '', message: '' });
+  };
+
+  const handleChange = (field: 'name' | 'email' | 'topic' | 'message') =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      const { value } = event.target;
+      setFormValues((prev) => ({ ...prev, [field]: value }));
+    };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    if (!formValues.name || !formValues.email || !formValues.topic || !formValues.message) {
+      setStatus('error');
+      setErrorDetail(
+        language === 'en'
+          ? 'Please complete all fields before submitting the form.'
+          : 'Por favor completa todos los campos antes de enviar el formulario.',
+      );
+      setToast({ type: 'error', message: copy.form.errorMessage });
+      return;
+    }
+
+    setStatus('submitting');
+    setErrorDetail(null);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formValues,
+          language,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const detail = body?.message as string | undefined;
+        throw new Error(detail ?? 'Request failed');
+      }
+
+      setStatus('success');
+      resetForm();
+      setToast({ type: 'success', message: copy.form.successMessage });
+    } catch (error) {
+      console.error('Contact form submission failed', error);
+      setStatus('error');
+      if (error instanceof Error && error.message) {
+        setErrorDetail(error.message);
+      }
+      setToast({ type: 'error', message: copy.form.errorMessage });
+    }
+  };
+
+  React.useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
 
   return (
     <div className="bg-black text-gray-100 min-h-screen">
@@ -124,7 +133,7 @@ const ContactPage: React.FC = () => {
               </div>
 
               <div className="p-8 sm:p-10 md:p-12">
-                <form className="space-y-6">
+                <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                   <div>
                     <label
                       htmlFor="name"
@@ -137,6 +146,9 @@ const ContactPage: React.FC = () => {
                       name="name"
                       type="text"
                       placeholder={copy.form.namePlaceholder}
+                      value={formValues.name}
+                      onChange={handleChange('name')}
+                      required
                       className="mt-3 block w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-white placeholder-gray-500 focus:border-[#d6b209] focus:ring-2 focus:ring-[#d6b209]/60 transition"
                     />
                   </div>
@@ -153,6 +165,9 @@ const ContactPage: React.FC = () => {
                       name="email"
                       type="email"
                       placeholder={copy.form.emailPlaceholder}
+                      value={formValues.email}
+                      onChange={handleChange('email')}
+                      required
                       className="mt-3 block w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-white placeholder-gray-500 focus:border-[#d6b209] focus:ring-2 focus:ring-[#d6b209]/60 transition"
                     />
                   </div>
@@ -168,7 +183,9 @@ const ContactPage: React.FC = () => {
                       id="topic"
                       name="topic"
                       className="mt-3 block w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-white focus:border-[#d6b209] focus:ring-2 focus:ring-[#d6b209]/60 transition"
-                      defaultValue=""
+                      value={formValues.topic}
+                      onChange={handleChange('topic')}
+                      required
                     >
                       <option value="" disabled>
                         {copy.form.topicPlaceholder}
@@ -193,15 +210,35 @@ const ContactPage: React.FC = () => {
                       name="message"
                       rows={4}
                       placeholder={copy.form.messagePlaceholder}
+                      value={formValues.message}
+                      onChange={handleChange('message')}
+                      required
                       className="mt-3 block w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-white placeholder-gray-500 focus:border-[#d6b209] focus:ring-2 focus:ring-[#d6b209]/60 transition resize-none"
                     ></textarea>
                   </div>
 
+                  {status === 'success' && (
+                    <div className="rounded-xl border border-[#1f3b64] bg-[#0d1625] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#d6b209]">{copy.form.successTitle}</p>
+                      <p className="mt-1 text-sm text-gray-200">{copy.form.successMessage}</p>
+                    </div>
+                  )}
+
+                  {status === 'error' && (
+                    <div className="rounded-xl border border-[#5b1d1f] bg-[#1e0b0c] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#f66]">{copy.form.errorTitle}</p>
+                      <p className="mt-1 text-sm text-gray-200">
+                        {errorDetail ?? copy.form.errorMessage}
+                      </p>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full flex justify-center items-center rounded-xl bg-[#ce1226] hover:bg-[#a70e1f] px-6 py-3 text-lg font-semibold text-white shadow-lg shadow-[#ce1226]/40 transition"
+                    disabled={isSubmitting}
+                    className="w-full flex justify-center items-center rounded-xl bg-[#ce1226] hover:bg-[#a70e1f] px-6 py-3 text-lg font-semibold text-white shadow-lg shadow-[#ce1226]/40 transition disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {copy.form.submit}
+                    {buttonLabel}
                   </button>
                 </form>
                 <p className="mt-6 text-xs text-gray-500">
@@ -212,6 +249,17 @@ const ContactPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-40 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
+            toast.type === 'success'
+              ? 'bg-[#13223e]/95 border-[#d6b209]/40 text-[#fef6cc]'
+              : 'bg-[#3a1515]/95 border-[#ce1226]/40 text-[#ffdada]'
+          }`}
+        >
+          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 };

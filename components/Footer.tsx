@@ -1,13 +1,24 @@
 
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { pageDefaults } from '../lib/pageDefaults';
+import { usePageContent } from '../hooks/usePageContent';
 
 const Footer: React.FC = () => {
+  const { language } = useLanguage();
+  const defaultContent = pageDefaults.footer;
+  const { content } = usePageContent('footer', defaultContent);
+  const copy = content[language as keyof typeof defaultContent] as {
+    tagline: string;
+    socialLinks: { facebook: string; instagram: string; twitter: string };
+  };
+
   return (
     <footer className="bg-black shadow-inner mt-12">
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-center space-x-6 text-gray-400 mb-4">
           <a
-            href="https://www.facebook.com"
+            href={copy.socialLinks.facebook}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Facebook"
@@ -18,7 +29,7 @@ const Footer: React.FC = () => {
             </svg>
           </a>
           <a
-            href="https://www.instagram.com"
+            href={copy.socialLinks.instagram}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram"
@@ -29,7 +40,7 @@ const Footer: React.FC = () => {
             </svg>
           </a>
           <a
-            href="https://www.twitter.com"
+            href={copy.socialLinks.twitter}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Twitter"
@@ -43,8 +54,8 @@ const Footer: React.FC = () => {
         <p className="text-center text-gray-400 text-sm">
           &copy; {new Date().getFullYear()} Dominicanos Unidos Baltimore. All rights reserved.
         </p>
-         <p className="text-center text-gray-500 text-xs mt-2">
-          A non-profit organization dedicated to community empowerment.
+        <p className="text-center text-gray-500 text-xs mt-2">
+          {copy.tagline}
         </p>
       </div>
     </footer>
