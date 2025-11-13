@@ -2,9 +2,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'crypto';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { verifyAdminRequest } from '../../../lib/adminAuth';
-import { getEventMetadata } from '../../../lib/adminEvents';
-import { getS3Client, S3_BUCKET, S3_REGION } from '../../../lib/awsS3';
+import { verifyAdminRequest } from '../../../lib/adminAuth.js';
+import { getEventMetadata } from '../../../lib/adminEvents.js';
+import { getS3Client, S3_BUCKET, S3_REGION } from '../../../lib/awsS3.js';
 
 function resolveExtension(fileName: string, fileType: string): string {
   const nameExt = fileName?.split('.').pop();

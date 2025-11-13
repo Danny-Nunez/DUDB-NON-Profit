@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { listEventFolders } from '../lib/s3Events';
+import { listEventFolders } from '../lib/s3Events.js';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {

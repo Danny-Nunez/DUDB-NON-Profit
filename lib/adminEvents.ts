@@ -6,7 +6,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import crypto from 'crypto';
-import { docClient, CONTENT_TABLE_NAME } from './dynamo';
+import { docClient, CONTENT_TABLE_NAME } from './dynamo.js';
 
 const EVENT_PK = 'EVENT';
 

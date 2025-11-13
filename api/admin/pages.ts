@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyAdminRequest } from '../../lib/adminAuth';
-import { getPageContent, listPageSlugs, upsertPageContent } from '../../lib/adminPages';
+import { verifyAdminRequest } from '../../lib/adminAuth.js';
+import { getPageContent, listPageSlugs, upsertPageContent } from '../../lib/adminPages.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!verifyAdminRequest(req)) {

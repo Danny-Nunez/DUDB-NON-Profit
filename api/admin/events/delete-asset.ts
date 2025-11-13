@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { verifyAdminRequest } from '../../../lib/adminAuth';
-import { getEventMetadata } from '../../../lib/adminEvents';
-import { getS3Client, S3_BUCKET } from '../../../lib/awsS3';
+import { verifyAdminRequest } from '../../../lib/adminAuth.js';
+import { getEventMetadata } from '../../../lib/adminEvents.js';
+import { getS3Client, S3_BUCKET } from '../../../lib/awsS3.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!verifyAdminRequest(req)) {

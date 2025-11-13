@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyAdminRequest } from '../../lib/adminAuth';
+import { verifyAdminRequest } from '../../lib/adminAuth.js';
 import {
   listBusinesses,
   createBusiness,
   updateBusiness,
   deleteBusiness,
-} from '../../lib/adminBusinesses';
+} from '../../lib/adminBusinesses.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!verifyAdminRequest(req)) {

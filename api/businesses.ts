@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { listBusinesses } from '../lib/adminBusinesses';
+import { listBusinesses } from '../lib/adminBusinesses.js';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
