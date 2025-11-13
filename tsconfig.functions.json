@@ -9,7 +9,8 @@
     "noEmit": false,
     "declaration": false,
     "sourceMap": false,
-    "allowJs": true
+    "allowJs": true,
+    "allowImportingTsExtensions": false
   },
   "include": [
     "lib/**/*.ts"
