@@ -20,6 +20,21 @@ interface Business {
   createdAt: string;
 }
 
+interface BoardMemberCopy {
+  name: string;
+  role: string;
+  description: string;
+}
+
+interface BoardMember {
+  id: string;
+  imageUrl: string;
+  imageKey?: string;
+  createdAt: string;
+  en: BoardMemberCopy;
+  es: BoardMemberCopy;
+}
+
 interface EventRecord {
   id: string;
   folder: string;
@@ -74,6 +89,41 @@ const labels = {
         events: 'Events',
         contact: 'Contact',
         footer: 'Footer',
+      },
+      boardMembers: {
+        heading: 'Board Members',
+        description:
+          'Manage the leadership cards displayed on the About page. Upload portraits and provide bilingual bios for each director.',
+        jsonNotice:
+          'Board members are managed through the section below. Saving this page will automatically keep the latest board member updates.',
+        loading: 'Loading board members…',
+        empty: 'No board members yet.',
+        listTitle: 'Current Members',
+        formTitle: 'Member Details',
+        addMember: 'Add member',
+        createTitle: 'Add Board Member',
+        editTitle: 'Edit Board Member',
+        uploadLabel: 'Upload Portrait',
+        uploadHint: 'Square PNG or JPG up to 5 MB works best.',
+        uploading: 'Uploading portrait…',
+        uploadSuccess: 'Portrait uploaded. Save to apply.',
+        uploadError: 'We could not upload the portrait. Try again.',
+        nameLabel: 'Name (English)',
+        roleLabel: 'Role (English)',
+        descriptionLabel: 'Bio (English)',
+        nameEsLabel: 'Nombre (Español)',
+        roleEsLabel: 'Cargo (Español)',
+        descriptionEsLabel: 'Biografía (Español)',
+        save: 'Save Member',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        confirmDelete: 'Are you sure you want to delete this board member?',
+        toastCreated: 'Board member added.',
+        toastUpdated: 'Board member updated.',
+        toastDeleted: 'Board member removed.',
+        toastError: 'Something went wrong. Please try again.',
+        previewAlt: 'Board member portrait preview',
+        error: 'Unable to load board members. Please try again.',
       },
     },
     businesses: {
@@ -184,6 +234,41 @@ const labels = {
         contact: 'Contacto',
         footer: 'Pie de página',
       },
+      boardMembers: {
+        heading: 'Junta Directiva',
+        description:
+          'Administra las tarjetas de liderazgo que aparecen en la página Sobre Nosotros. Sube retratos y escribe biografías en ambos idiomas para cada director.',
+        jsonNotice:
+          'La junta se gestiona en la sección inferior. Al guardar la página se mantendrán automáticamente los últimos cambios en la junta.',
+        loading: 'Cargando miembros de la junta…',
+        empty: 'Aún no hay miembros agregados.',
+        listTitle: 'Miembros Actuales',
+        formTitle: 'Detalles del Miembro',
+        addMember: 'Agregar miembro',
+        createTitle: 'Agregar Miembro de la Junta',
+        editTitle: 'Editar Miembro de la Junta',
+        uploadLabel: 'Subir Retrato',
+        uploadHint: 'PNG o JPG cuadrado de hasta 5 MB funciona mejor.',
+        uploading: 'Subiendo retrato…',
+        uploadSuccess: 'Retrato cargado. Guarda para aplicar.',
+        uploadError: 'No pudimos subir el retrato. Inténtalo nuevamente.',
+        nameLabel: 'Nombre (Inglés)',
+        roleLabel: 'Cargo (Inglés)',
+        descriptionLabel: 'Biografía (Inglés)',
+        nameEsLabel: 'Nombre (Español)',
+        roleEsLabel: 'Cargo (Español)',
+        descriptionEsLabel: 'Biografía (Español)',
+        save: 'Guardar Miembro',
+        cancel: 'Cancelar',
+        delete: 'Eliminar',
+        confirmDelete: '¿Seguro que deseas eliminar a este miembro de la junta?',
+        toastCreated: 'Miembro agregado.',
+        toastUpdated: 'Miembro actualizado.',
+        toastDeleted: 'Miembro eliminado.',
+        toastError: 'Algo salió mal. Inténtalo nuevamente.',
+        previewAlt: 'Vista previa del retrato del miembro de la junta',
+        error: 'No pudimos cargar los miembros de la junta. Inténtalo nuevamente.',
+      },
     },
     businesses: {
       heading: 'Directorio de Negocios',
@@ -223,7 +308,7 @@ const labels = {
       delete: 'Eliminar',
       confirmDelete: '¿Deseas eliminar este evento?',
       folder: 'Nombre de la carpeta S3',
-      folderHelper: 'Debe coincidir con una carpeta en tu bucket S3 (ej. “Merengue Party FEB 2025”).',
+      folderHelper: 'Debe coincidir con una carpeta en tu bucket S3 (ej. "Merengue Party FEB 2025").',
       titleEn: 'Título (Inglés)',
       titleEs: 'Título (Español)',
       descriptionEn: 'Descripción (Inglés)',
@@ -433,6 +518,24 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isAboutPage = selectedSlug === 'about';
+
+  const toEditorString = useCallback(
+    (slug: PageSlug, raw: unknown) => {
+      const fallback = pageDefaults[slug];
+      const clone = JSON.parse(JSON.stringify(raw ?? fallback));
+      if (slug === 'about' && clone && typeof clone === 'object') {
+        if (clone.en && typeof clone.en === 'object' && 'boardMembers' in clone.en) {
+          delete clone.en.boardMembers;
+        }
+        if (clone.es && typeof clone.es === 'object' && 'boardMembers' in clone.es) {
+          delete clone.es.boardMembers;
+        }
+      }
+      return JSON.stringify(clone, null, 2);
+    },
+    [],
+  );
 
   const loadSlugs = useCallback(async () => {
     try {
@@ -469,7 +572,7 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
         }
         if (response.status === 404) {
           const defaults = pageDefaults[slug];
-          setEditorValue(JSON.stringify(defaults, null, 2));
+          setEditorValue(toEditorString(slug, defaults));
           setUpdatedAt(null);
           setIsLoading(false);
           return;
@@ -478,18 +581,18 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           throw new Error(labels.loadError);
         }
         const data = (await response.json()) as { content: unknown; updatedAt?: string };
-        setEditorValue(JSON.stringify(data.content ?? pageDefaults[slug], null, 2));
+        setEditorValue(toEditorString(slug, data.content ?? pageDefaults[slug]));
         setUpdatedAt(data.updatedAt ?? null);
       } catch (error) {
         console.error(error);
         setErrorMessage(labels.loadError);
-        setEditorValue(JSON.stringify(pageDefaults[slug], null, 2));
+        setEditorValue(toEditorString(slug, pageDefaults[slug]));
         setUpdatedAt(null);
       } finally {
         setIsLoading(false);
       }
     },
-    [authHeaders, labels.loadError, onUnauthorized],
+    [authHeaders, labels.loadError, onUnauthorized, toEditorString],
   );
 
   useEffect(() => {
@@ -505,6 +608,46 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
     setErrorMessage(null);
     try {
       const parsed = JSON.parse(editorValue);
+      if (isAboutPage) {
+        try {
+          const boardResponse = await fetch('/api/admin/board-members', {
+            headers: authHeaders,
+          });
+          if (boardResponse.status === 401) {
+            onUnauthorized();
+            return;
+          }
+          if (boardResponse.ok) {
+            const data = (await boardResponse.json()) as { members: BoardMember[] };
+            const members = data.members ?? [];
+            const aboutContent = parsed as Record<string, unknown>;
+            const ensureLanguage = (locale: 'en' | 'es') => {
+              const current = aboutContent[locale];
+              if (!current || typeof current !== 'object') {
+                // eslint-disable-next-line no-param-reassign
+                aboutContent[locale] = {};
+              }
+              return aboutContent[locale] as Record<string, unknown>;
+            };
+            const mapMembers = (locale: 'en' | 'es') =>
+              members.map((member) => ({
+                id: member.id,
+                name: member[locale].name,
+                role: member[locale].role,
+                description: member[locale].description,
+                imageUrl: member.imageUrl,
+                imageKey: member.imageKey ?? '',
+                createdAt: member.createdAt,
+              }));
+            const enContent = ensureLanguage('en');
+            const esContent = ensureLanguage('es');
+            enContent.boardMembers = mapMembers('en');
+            esContent.boardMembers = mapMembers('es');
+          }
+        } catch (boardError) {
+          console.error('Failed to sync board members before saving', boardError);
+        }
+      }
       const response = await fetch('/api/admin/pages', {
         method: 'PUT',
         headers: authHeaders,
@@ -554,7 +697,7 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
         </label>
         <button
           type="button"
-          onClick={() => setEditorValue(JSON.stringify(pageDefaults[selectedSlug], null, 2))}
+          onClick={() => setEditorValue(toEditorString(selectedSlug, pageDefaults[selectedSlug]))}
           className="self-start rounded-xl border border-[#d6b209]/50 px-4 py-2 text-sm font-semibold text-[#d6b209] hover:bg-[#d6b209]/10 transition"
         >
           {labels.useDefaults}
@@ -562,6 +705,9 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
       </div>
 
       <p className="text-xs uppercase tracking-[0.3em] text-gray-500">{labels.helper}</p>
+      {isAboutPage && (
+        <p className="mt-2 text-xs text-[#d6b209]">{labels.boardMembers.jsonNotice}</p>
+      )}
 
       <textarea
         value={editorValue}
@@ -588,6 +734,16 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           )}
         </div>
       </div>
+
+      {isAboutPage && (
+        <BoardMembersManager
+          language={language}
+          authHeaders={authHeaders}
+          onUnauthorized={onUnauthorized}
+          labels={labels.boardMembers}
+          onAfterChange={() => loadPage('about')}
+        />
+      )}
 
       {statusMessage && <p className="text-sm text-[#6bc46d]">{statusMessage}</p>}
       {errorMessage && <p className="text-sm text-[#ce1226]">{errorMessage}</p>}
@@ -801,11 +957,12 @@ const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
     setUploadStatus('idle');
     void handleImageUpload(file);
-    event.target.value = '';
+    input.value = '';
   };
 
   return (
@@ -1855,6 +2012,409 @@ const MediaThumbnail: React.FC<MediaThumbnailProps> = ({
       )}
       {deleteState === 'success' && <p className="text-xs text-[#6bc46d]">{resolvedLabels.success}</p>}
     </div>
+  );
+};
+
+const createEmptyBoardMemberForm = () => ({
+  imageUrl: '',
+  imageKey: '',
+  en: { name: '', role: '', description: '' },
+  es: { name: '', role: '', description: '' },
+});
+
+interface BoardMembersManagerProps extends CommonProps {
+  labels: (typeof labels)['en']['pages']['boardMembers'];
+  onAfterChange: () => void;
+}
+
+const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
+  language,
+  authHeaders,
+  onUnauthorized,
+  labels,
+  onAfterChange,
+}) => {
+  const [members, setMembers] = useState<BoardMember[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<FormMode>('create');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formValues, setFormValues] = useState(() => createEmptyBoardMemberForm());
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const { toast, setToast } = useAutoDismissToast();
+
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/board-members', {
+        headers: authHeaders,
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to load board members');
+      }
+      const data = (await response.json()) as { members: BoardMember[] };
+      setMembers(data.members ?? []);
+    } catch (err) {
+      console.error(err);
+      setError(labels.error);
+    } finally {
+      setLoading(false);
+    }
+  }, [authHeaders, labels.error, onUnauthorized]);
+
+  useEffect(() => {
+    void fetchMembers();
+  }, [fetchMembers]);
+
+  const resetForm = useCallback(() => {
+    setFormMode('create');
+    setEditingId(null);
+    setFormValues(createEmptyBoardMemberForm());
+    setUploadStatus('idle');
+    setUploadError(null);
+  }, []);
+
+  const startEdit = (member: BoardMember) => {
+    setFormMode('edit');
+    setEditingId(member.id);
+    setFormValues({
+      imageUrl: member.imageUrl,
+      imageKey: member.imageKey ?? '',
+      en: { ...member.en },
+      es: { ...member.es },
+    });
+    setUploadStatus('idle');
+    setUploadError(null);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadStatus('idle');
+    setUploadError(null);
+    try {
+      const response = await fetch('/api/admin/board-members/upload', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to request upload URL');
+      }
+      const data = (await response.json()) as { uploadUrl: string; objectUrl: string; key: string };
+      const uploadResponse = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      if (!uploadResponse.ok) {
+        throw new Error('Upload to S3 failed');
+      }
+      setFormValues((previous) => ({
+        ...previous,
+        imageUrl: data.objectUrl,
+        imageKey: data.key,
+      }));
+      setUploadStatus('success');
+    } catch (err) {
+      console.error(err);
+      setUploadStatus('error');
+      setUploadError(labels.uploadError);
+    } finally {
+      setUploading(false);
+      input.value = '';
+    }
+  };
+
+  const validateRequiredFields = () => {
+    const enValid = formValues.en.name.trim() && formValues.en.role.trim();
+    const esValid = formValues.es.name.trim() && formValues.es.role.trim();
+    return Boolean(enValid && esValid);
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!formValues.imageUrl) {
+      alert(language === 'en' ? 'Please upload a portrait before saving.' : 'Por favor sube un retrato antes de guardar.');
+      return;
+    }
+    if (!validateRequiredFields()) {
+      alert(language === 'en' ? 'Name and role are required in both languages.' : 'El nombre y el cargo son obligatorios en ambos idiomas.');
+      return;
+    }
+    const payload = {
+      imageUrl: formValues.imageUrl,
+      imageKey: formValues.imageKey || undefined,
+      en: {
+        name: formValues.en.name.trim(),
+        role: formValues.en.role.trim(),
+        description: formValues.en.description.trim(),
+      },
+      es: {
+        name: formValues.es.name.trim(),
+        role: formValues.es.role.trim(),
+        description: formValues.es.description.trim(),
+      },
+    };
+    try {
+      const response = await fetch('/api/admin/board-members', {
+        method: formMode === 'edit' ? 'PUT' : 'POST',
+        headers: authHeaders,
+        body: JSON.stringify(
+          formMode === 'edit'
+            ? {
+                id: editingId,
+                ...payload,
+              }
+            : payload,
+        ),
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to save board member');
+      }
+      await fetchMembers();
+      onAfterChange();
+      resetForm();
+      setToast({ message: formMode === 'edit' ? labels.toastUpdated : labels.toastCreated, type: 'success' });
+    } catch (err) {
+      console.error(err);
+      setToast({ message: labels.toastError, type: 'error' });
+    }
+  };
+
+  const handleDelete = async (member: BoardMember) => {
+    if (!window.confirm(labels.confirmDelete)) return;
+    try {
+      const response = await fetch(`/api/admin/board-members?id=${encodeURIComponent(member.id)}`, {
+        method: 'DELETE',
+        headers: authHeaders,
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to delete board member');
+      }
+      await fetchMembers();
+      onAfterChange();
+      if (editingId === member.id) {
+        resetForm();
+      }
+      setToast({ message: labels.toastDeleted, type: 'success' });
+    } catch (err) {
+      console.error(err);
+      setToast({ message: labels.toastError, type: 'error' });
+    }
+  };
+
+  const localizedMembers = members.map((member) => {
+    const primary = member[language].name || member.en.name || member.es.name;
+    const secondary = language === 'en' ? member.es.name : member.en.name;
+    const role = member[language].role || member.en.role || member.es.role;
+    const description = member[language].description || member.en.description || member.es.description;
+    return {
+      ...member,
+      primaryName: primary,
+      secondaryName: secondary,
+      role,
+      description,
+    };
+  });
+
+  return (
+    <section className="mt-10 space-y-6 rounded-2xl border border-[#012d62]/30 bg-gray-900/60 p-6 shadow-xl">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-2xl space-y-1">
+          <h3 className="text-xl font-bold text-white">{labels.heading}</h3>
+          <p className="text-sm text-gray-400">{labels.description}</p>
+        </div>
+        <button
+          type="button"
+          onClick={resetForm}
+          className="self-start rounded-xl bg-[#d6b209] px-4 py-2 text-sm font-semibold text-black transition hover:bg-[#b79807]"
+        >
+          {labels.addMember}
+        </button>
+      </header>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)]">
+        <div className="space-y-4">
+          <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-[#d6b209]">{labels.listTitle}</h4>
+          {loading && <p className="text-sm text-gray-400">{labels.loading}</p>}
+          {error && <p className="text-sm text-[#ce1226]">{error}</p>}
+          {!loading && !error && localizedMembers.length === 0 && (
+            <p className="text-sm text-gray-400">{labels.empty}</p>
+          )}
+          <div className="space-y-4">
+            {localizedMembers.map((member) => (
+              <div
+                key={member.id}
+                className="flex flex-col gap-4 rounded-xl border border-gray-800 bg-black/40 p-4 shadow-inner shadow-black/40 sm:flex-row"
+              >
+                <div className="flex-shrink-0">
+                  <div className="h-24 w-24 overflow-hidden rounded-full border border-[#012d62]/60 bg-[#012d62]/40">
+                    {member.imageUrl ? (
+                      <img src={member.imageUrl} alt={member.primaryName} className="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">No image</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <h5 className="text-lg font-semibold text-white">{member.primaryName}</h5>
+                    {member.secondaryName && member.secondaryName !== member.primaryName && (
+                      <p className="text-xs text-gray-500">{member.secondaryName}</p>
+                    )}
+                    <p className="text-sm text-[#d6b209] uppercase tracking-[0.35em]">{member.role}</p>
+                  </div>
+                  {member.description && <p className="text-sm text-gray-300">{member.description}</p>}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(member)}
+                      className="inline-flex min-w-[80px] items-center justify-center rounded-lg bg-[#012d62] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0b417f]"
+                    >
+                      {labels.edit ?? 'Edit'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(member)}
+                      className="rounded-lg bg-[#ce1226] px-4 py-2 text-sm text-white transition hover:bg-[#a70e1f]"
+                    >
+                      {labels.delete}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <form className="space-y-4 rounded-xl border border-gray-800 bg-black/40 p-5" onSubmit={handleSubmit}>
+          <div className="space-y-1">
+            <h4 className="text-base font-semibold text-white">
+              {formMode === 'edit' ? labels.editTitle : labels.createTitle}
+            </h4>
+            <p className="text-xs uppercase tracking-[0.3em] text-gray-500">{labels.formTitle}</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em]">
+              {labels.uploadLabel}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="text-sm text-gray-300 file:mr-4 file:rounded-lg file:border-0 file:bg-[#d6b209] file:px-4 file:py-2 file:text-black file:font-semibold file:hover:bg-[#b79807] file:transition"
+            />
+            <span className="text-xs text-gray-500">{labels.uploadHint}</span>
+            {uploading && <span className="text-sm text-gray-400">{labels.uploading}</span>}
+            {!uploading && uploadStatus === 'success' && <span className="text-sm text-[#6bc46d]">{labels.uploadSuccess}</span>}
+            {!uploading && uploadStatus === 'error' && (
+              <span className="text-sm text-[#ce1226]">{uploadError ?? labels.uploadError}</span>
+            )}
+          </div>
+
+          {formValues.imageUrl && (
+            <div className="flex items-center gap-4 rounded-xl border border-gray-800 bg-black/50 p-3">
+              <img src={formValues.imageUrl} alt={labels.previewAlt} className="h-16 w-16 rounded-lg object-cover" />
+              <div className="text-xs text-gray-500 break-all">{formValues.imageKey || formValues.imageUrl}</div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 gap-4">
+            <LabeledInput
+              label={labels.nameLabel}
+              value={formValues.en.name}
+              onChange={(value) => setFormValues((previous) => ({ ...previous, en: { ...previous.en, name: value } }))}
+              required
+            />
+            <LabeledInput
+              label={labels.roleLabel}
+              value={formValues.en.role}
+              onChange={(value) => setFormValues((previous) => ({ ...previous, en: { ...previous.en, role: value } }))}
+              required
+            />
+            <LabeledTextArea
+              label={labels.descriptionLabel}
+              value={formValues.en.description}
+              onChange={(value) => setFormValues((previous) => ({ ...previous, en: { ...previous.en, description: value } }))}
+              rows={3}
+            />
+            <LabeledInput
+              label={labels.nameEsLabel}
+              value={formValues.es.name}
+              onChange={(value) => setFormValues((previous) => ({ ...previous, es: { ...previous.es, name: value } }))}
+              required
+            />
+            <LabeledInput
+              label={labels.roleEsLabel}
+              value={formValues.es.role}
+              onChange={(value) => setFormValues((previous) => ({ ...previous, es: { ...previous.es, role: value } }))}
+              required
+            />
+            <LabeledTextArea
+              label={labels.descriptionEsLabel}
+              value={formValues.es.description}
+              onChange={(value) => setFormValues((previous) => ({ ...previous, es: { ...previous.es, description: value } }))}
+              rows={3}
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              type="submit"
+              className="rounded-xl bg-[#d6b209] px-5 py-3 text-sm font-semibold text-black transition hover:bg-[#b79807]"
+              disabled={uploading}
+            >
+              {labels.save}
+            </button>
+            {formMode === 'edit' && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-xl border border-gray-700 px-5 py-3 text-sm font-semibold text-gray-200 transition hover:bg-gray-800"
+              >
+                {labels.cancel}
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border ${
+            toast.type === 'success'
+              ? 'bg-[#13223e]/90 border-[#d6b209]/40 text-[#e8e0b3]'
+              : 'bg-[#3a1515]/90 border-[#ce1226]/40 text-[#f6c0c0]'
+          }`}
+        >
+          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+        </div>
+      )}
+    </section>
   );
 };
 

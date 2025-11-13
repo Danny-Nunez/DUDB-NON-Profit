@@ -20,6 +20,12 @@ import {
   deleteEvent,
   getEventMetadata,
 } from './lib/adminEvents';
+import {
+  listBoardMembers,
+  createBoardMember,
+  updateBoardMember,
+  deleteBoardMember,
+} from './lib/adminBoardMembers';
 import { getS3Client, S3_BUCKET, S3_REGION } from './lib/awsS3';
 
 export default defineConfig(({ mode }) => {
@@ -337,6 +343,149 @@ export default defineConfig(({ mode }) => {
               } catch (error) {
                 console.error('Admin businesses error:', error);
                 sendJson(res, 500, { message: 'Internal server error' });
+              }
+              return;
+            }
+
+            if (pathname === '/api/admin/board-members') {
+              const isNonEmpty = (value: unknown): value is string =>
+                typeof value === 'string' && value.trim().length > 0;
+
+              if (!isAdminAuthorized(req)) {
+                sendJson(res, 401, { message: 'Unauthorized' });
+                return;
+              }
+              try {
+                if (req.method === 'GET') {
+                  const members = await listBoardMembers();
+                  sendJson(res, 200, { members });
+                  return;
+                }
+                if (req.method === 'POST') {
+                  const body = await readJsonBody(req);
+                  const { imageUrl, imageKey, en, es } = body ?? {};
+                  if (!isNonEmpty(imageUrl) || typeof en !== 'object' || typeof es !== 'object') {
+                    sendJson(res, 400, { message: 'Portrait, English, and Spanish details are required.' });
+                    return;
+                  }
+                  const enFields = en as Record<string, unknown>;
+                  const esFields = es as Record<string, unknown>;
+                  if (
+                    !isNonEmpty(enFields.name) ||
+                    !isNonEmpty(enFields.role) ||
+                    !isNonEmpty(esFields.name) ||
+                    !isNonEmpty(esFields.role)
+                  ) {
+                    sendJson(res, 400, { message: 'Name and role are required in both languages.' });
+                    return;
+                  }
+                  const member = await createBoardMember({
+                    imageUrl,
+                    imageKey: isNonEmpty(imageKey) ? imageKey : undefined,
+                    en: {
+                      name: String(enFields.name ?? ''),
+                      role: String(enFields.role ?? ''),
+                      description: String(enFields.description ?? ''),
+                    },
+                    es: {
+                      name: String(esFields.name ?? ''),
+                      role: String(esFields.role ?? ''),
+                      description: String(esFields.description ?? ''),
+                    },
+                  });
+                  sendJson(res, 201, { member });
+                  return;
+                }
+                if (req.method === 'PUT') {
+                  const body = await readJsonBody(req);
+                  const { id, imageUrl, imageKey, en, es } = body ?? {};
+                  if (!isNonEmpty(id) || typeof en !== 'object' || typeof es !== 'object') {
+                    sendJson(res, 400, { message: 'Board member id and bilingual details are required.' });
+                    return;
+                  }
+                  const enFields = en as Record<string, unknown>;
+                  const esFields = es as Record<string, unknown>;
+                  if (
+                    !isNonEmpty(enFields.name) ||
+                    !isNonEmpty(enFields.role) ||
+                    !isNonEmpty(esFields.name) ||
+                    !isNonEmpty(esFields.role)
+                  ) {
+                    sendJson(res, 400, { message: 'Name and role are required in both languages.' });
+                    return;
+                  }
+                  const member = await updateBoardMember(id, {
+                    imageUrl: isNonEmpty(imageUrl) ? imageUrl : undefined,
+                    imageKey: isNonEmpty(imageKey) ? imageKey : undefined,
+                    en: {
+                      name: String(enFields.name ?? ''),
+                      role: String(enFields.role ?? ''),
+                      description: String(enFields.description ?? ''),
+                    },
+                    es: {
+                      name: String(esFields.name ?? ''),
+                      role: String(esFields.role ?? ''),
+                      description: String(esFields.description ?? ''),
+                    },
+                  });
+                  sendJson(res, 200, { member });
+                  return;
+                }
+                if (req.method === 'DELETE') {
+                  const id = url.searchParams.get('id');
+                  if (!isNonEmpty(id)) {
+                    sendJson(res, 400, { message: 'Board member id is required.' });
+                    return;
+                  }
+                  await deleteBoardMember(id);
+                  sendJson(res, 200, { message: 'Board member deleted.' });
+                  return;
+                }
+                sendJson(res, 405, { message: 'Method Not Allowed' });
+              } catch (error) {
+                console.error('Admin board members error:', error);
+                sendJson(res, 500, { message: 'Internal server error' });
+              }
+              return;
+            }
+
+            if (pathname === '/api/admin/board-members/upload') {
+              if (!isAdminAuthorized(req)) {
+                sendJson(res, 401, { message: 'Unauthorized' });
+                return;
+              }
+              if (req.method !== 'POST') {
+                sendJson(res, 405, { message: 'Method Not Allowed' });
+                return;
+              }
+              try {
+                const body = await readJsonBody(req);
+                const { fileName, fileType } = body ?? {};
+                if (!fileName || !fileType) {
+                  sendJson(res, 400, { message: 'fileName and fileType are required.' });
+                  return;
+                }
+                const extension = (() => {
+                  const fromName = String(fileName).split('.').pop();
+                  if (fromName && fromName !== fileName) return fromName.toLowerCase();
+                  const fromType = String(fileType).split('/').pop();
+                  if (fromType && fromType !== fileType) return fromType.toLowerCase();
+                  return 'jpg';
+                })();
+                const key = `boardmembers/${crypto.randomUUID()}.${extension}`;
+                const client = getS3Client();
+                const command = new PutObjectCommand({
+                  Bucket: S3_BUCKET,
+                  Key: key,
+                  ContentType: fileType,
+                  CacheControl: 'public, max-age=31536000, immutable',
+                });
+                const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+                const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
+                sendJson(res, 200, { uploadUrl, objectUrl, key });
+              } catch (error) {
+                console.error('Board member upload error (dev):', error);
+                sendJson(res, 500, { message: 'Unable to generate upload URL.' });
               }
               return;
             }
