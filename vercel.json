@@ -1,7 +1,8 @@
 {
   "functions": {
-    "api/**/*.ts": {
-      "includeFiles": "lib/**"
+    "dist-server/api/**/*.js": {
+      "runtime": "@vercel/node@3.0.0",
+      "includeFiles": "dist-server/lib/**"
     }
   }
 }

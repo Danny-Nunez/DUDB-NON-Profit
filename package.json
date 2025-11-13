@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "create:table": "tsx scripts/create-table.ts",
-    "build": "vite build",
+    "build:functions": "tsc --project tsconfig.functions.json",
+    "build": "npm run build:functions && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
