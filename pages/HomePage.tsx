@@ -225,7 +225,7 @@ const HomePage: React.FC = () => {
               <div key={feature.title} className="text-center p-6 bg-gray-900 rounded-lg border border-[#d6b209]/30">
                 <h3 className="text-xl font-bold text-[#d6b209]">{feature.title}</h3>
                 <p className="mt-2 text-gray-400">{feature.description}</p>
-              </div>
+            </div>
             ))}
           </div>
         </div>

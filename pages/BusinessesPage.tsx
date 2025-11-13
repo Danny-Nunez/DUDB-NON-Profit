@@ -100,14 +100,14 @@ const BusinessesPage: React.FC = () => {
             details.push(`${language === 'en' ? 'Contact:' : 'Contacto:'} ${business.contact}`);
           }
           return (
-            <Card
+          <Card
               key={business.id}
-              imageUrl={business.imageUrl}
-              title={business.name}
-              subtitle={business.category}
+            imageUrl={business.imageUrl}
+            title={business.name}
+            subtitle={business.category}
               description={details.join('\n\n')}
               onClick={() => setSelectedBusiness(business)}
-            />
+          />
           );
         })}
       </div>

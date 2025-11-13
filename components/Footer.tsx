@@ -54,7 +54,7 @@ const Footer: React.FC = () => {
         <p className="text-center text-gray-400 text-sm">
           &copy; {new Date().getFullYear()} Dominicanos Unidos Baltimore. All rights reserved.
         </p>
-        <p className="text-center text-gray-500 text-xs mt-2">
+         <p className="text-center text-gray-500 text-xs mt-2">
           {copy.tagline}
         </p>
       </div>

@@ -104,14 +104,14 @@ const EventsPage: React.FC = () => {
             event.assets.find((asset) => !VIDEO_REGEX.test(asset.url)) ?? event.assets[0];
           const localized = event.content?.[language];
           return (
-            <Card
+          <Card
               key={event.id ?? event.folder}
               imageUrl={previewAsset?.url ?? 'https://placehold.co/600x400?text=Dominicanos+Unidos'}
               title={localized?.title ?? event.folder}
               subtitle={localized?.date ?? ''}
               description={localized?.description ?? copy.fallbackDescription}
               onClick={() => handleNavigate(event)}
-            />
+          />
           );
         })}
       </div>

@@ -27,7 +27,7 @@ const DonatePage: React.FC = () => {
                   {tier.amount} - {tier.name}
                 </h3>
                 <p className="text-gray-400 mt-2">{tier.description}</p>
-              </div>
+            </div>
             ))}
           </div>
 

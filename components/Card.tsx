@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 interface CardProps {
   imageUrl: string;
@@ -14,6 +14,10 @@ const VIDEO_REGEX = /\.(mp4|webm|ogg|mov)$/i;
 const Card: React.FC<CardProps> = ({ imageUrl, title, subtitle, description, onClick }) => {
   const [hasMediaError, setHasMediaError] = useState(false);
   const isVideo = useMemo(() => VIDEO_REGEX.test(imageUrl), [imageUrl]);
+  const prepareVideoPreview = useCallback((video: HTMLVideoElement | null) => {
+    if (!video) return;
+    // Allow the browser to choose the best preview frame
+  }, []);
 
   return (
     <div
@@ -37,12 +41,12 @@ const Card: React.FC<CardProps> = ({ imageUrl, title, subtitle, description, onC
         {!hasMediaError ? (
           isVideo ? (
             <video
+              ref={prepareVideoPreview}
               className="w-full h-full object-cover"
               src={imageUrl}
               muted
-              loop
               playsInline
-              autoPlay
+              preload="auto"
               onError={() => setHasMediaError(true)}
             />
           ) : (

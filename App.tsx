@@ -18,22 +18,22 @@ const AppRoutes: React.FC = () => {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
-    <div className="bg-black text-gray-200 min-h-screen flex flex-col font-sans">
+      <div className="bg-black text-gray-200 min-h-screen flex flex-col font-sans">
       {!isAdminRoute && <Header />}
-      <main className="flex-grow">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/donate" element={<DonatePage />} />
-          <Route path="/businesses" element={<BusinessesPage />} />
-          <Route path="/events" element={<EventsPage />} />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/donate" element={<DonatePage />} />
+            <Route path="/businesses" element={<BusinessesPage />} />
+            <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:eventId" element={<EventGalleryPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/contact" element={<ContactPage />} />
-        </Routes>
-      </main>
+          </Routes>
+        </main>
       {!isAdminRoute && <Footer />}
-    </div>
+      </div>
   );
 };
 
@@ -42,7 +42,7 @@ const App: React.FC = () => {
     <LanguageProvider>
       <HashRouter>
         <AppRoutes />
-      </HashRouter>
+    </HashRouter>
     </LanguageProvider>
   );
 };

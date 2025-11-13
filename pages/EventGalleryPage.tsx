@@ -47,21 +47,7 @@ const EventGalleryPage: React.FC = () => {
   const isSelectedVideo = selectedImage ? /\.(mp4|webm|ogg|mov)$/i.test(selectedImage) : false;
   const ensureVideoFrame = useCallback((video: HTMLVideoElement | null) => {
     if (!video) return;
-    const primeFrame = () => {
-      try {
-        if (video.readyState >= 2 && video.currentTime === 0) {
-          video.currentTime = 0.01;
-        }
-      } catch (err) {
-        console.warn('Unable to set initial video frame', err);
-      }
-    };
-
-    if (video.readyState >= 2) {
-      primeFrame();
-    } else {
-      video.addEventListener('loadeddata', primeFrame, { once: true });
-    }
+    // Let the browser handle preview framing
   }, []);
 
   const decodedId = useMemo(() => {
@@ -191,9 +177,7 @@ const EventGalleryPage: React.FC = () => {
                     className="h-60 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     muted
                     playsInline
-                    preload="metadata"
-                    controls={false}
-                    poster={`${asset.url}#t=0.01`}
+                    preload="auto"
                   />
                 ) : (
                   <img
@@ -233,7 +217,10 @@ const EventGalleryPage: React.FC = () => {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
           onClick={() => setSelectedImage(null)}
         >
-          <div className="relative max-h-full max-w-4xl">
+          <div
+            className="relative max-h-full max-w-4xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <button
               type="button"
               onClick={() => setSelectedImage(null)}
@@ -246,6 +233,7 @@ const EventGalleryPage: React.FC = () => {
               <video
                 src={selectedImage}
                 controls
+                playsInline
                 className="max-h-[80vh] w-full object-contain rounded-lg"
               />
             ) : (
