@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import PageWrapper from '../components/PageWrapper';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -45,6 +45,24 @@ const EventGalleryPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const isSelectedVideo = selectedImage ? /\.(mp4|webm|ogg|mov)$/i.test(selectedImage) : false;
+  const ensureVideoFrame = useCallback((video: HTMLVideoElement | null) => {
+    if (!video) return;
+    const primeFrame = () => {
+      try {
+        if (video.readyState >= 2 && video.currentTime === 0) {
+          video.currentTime = 0.01;
+        }
+      } catch (err) {
+        console.warn('Unable to set initial video frame', err);
+      }
+    };
+
+    if (video.readyState >= 2) {
+      primeFrame();
+    } else {
+      video.addEventListener('loadeddata', primeFrame, { once: true });
+    }
+  }, []);
 
   const decodedId = useMemo(() => {
     if (!eventId) return null;
@@ -168,11 +186,14 @@ const EventGalleryPage: React.FC = () => {
               >
                 {isVideo ? (
                   <video
+                    ref={ensureVideoFrame}
                     src={asset.url}
                     className="h-60 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     muted
                     playsInline
                     preload="metadata"
+                    controls={false}
+                    poster={`${asset.url}#t=0.01`}
                   />
                 ) : (
                   <img
@@ -185,8 +206,18 @@ const EventGalleryPage: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 {isVideo && (
                   <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="flex pl-1 h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white text-3xl drop-shadow-lg">
-                      ▶
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 drop-shadow-lg">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="h-8 w-8 text-white"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M8.25 5.428v13.144c0 .86.922 1.392 1.687.967l11.276-6.572a1.125 1.125 0 0 0 0-1.934L9.937 4.462c-.765-.425-1.687.107-1.687.966Z"
+                        />
+                      </svg>
                     </span>
                   </span>
                 )}
