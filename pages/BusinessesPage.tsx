@@ -29,6 +29,17 @@ const BusinessesPage: React.FC = () => {
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
 
   useEffect(() => {
+    if (selectedBusiness) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedBusiness]);
+
+  useEffect(() => {
     let isMounted = true;
     async function loadBusinesses() {
       try {
@@ -115,24 +126,24 @@ const BusinessesPage: React.FC = () => {
       {selectedBusiness && (
         <div
           role="presentation"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm p-4 sm:p-6 flex justify-center"
           onClick={closeModal}
         >
           <div
             role="dialog"
             aria-modal="true"
-            className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-gray-950 border border-[#012d62]/40 shadow-2xl"
+            className="relative w-full max-w-3xl bg-gray-950 border border-[#012d62]/40 shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={closeModal}
-              className="absolute right-4 top-4 text-white text-2xl font-bold hover:text-[#d6b209] transition"
+              className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-black/80 text-white text-2xl font-bold shadow-lg transition hover:bg-black/90 hover:text-[#d6b209]"
               aria-label={language === 'en' ? 'Close details' : 'Cerrar detalles'}
             >
               ×
             </button>
-            <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr]">
+            <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] overflow-y-auto">
               <div className="relative h-64 md:h-full bg-black/60">
                 <img
                   src={selectedBusiness.imageUrl}
