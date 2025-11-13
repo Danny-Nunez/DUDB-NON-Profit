@@ -1,23 +1,22 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist-server",
-    "rootDir": ".",
+    "outDir": "lib",
+    "rootDir": "lib",
     "module": "ESNext",
     "target": "ES2020",
     "moduleResolution": "node",
     "noEmit": false,
     "declaration": false,
-    "sourceMap": false
+    "sourceMap": false,
+    "allowJs": true
   },
   "include": [
-    "api/**/*.ts",
     "lib/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "dist-ssr",
-    "dist-server"
+    "dist-ssr"
   ]
 }

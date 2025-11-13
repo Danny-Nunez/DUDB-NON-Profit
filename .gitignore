@@ -25,3 +25,5 @@ dist-server
 *.njsproj
 *.sln
 *.sw?
+
+lib/**/*.js
