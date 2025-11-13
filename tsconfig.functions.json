@@ -10,7 +10,8 @@
     "declaration": false,
     "sourceMap": false,
     "allowJs": true,
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "lib/**/*.ts"
