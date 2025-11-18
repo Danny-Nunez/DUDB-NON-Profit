@@ -26,6 +26,12 @@ import {
   updateBoardMember,
   deleteBoardMember,
 } from './lib/adminBoardMembers';
+import {
+  listSponsors,
+  createSponsor,
+  updateSponsor,
+  deleteSponsor,
+} from './lib/adminSponsors';
 import { getS3Client, S3_BUCKET, S3_REGION } from './lib/awsS3';
 
 export default defineConfig(({ mode }) => {
@@ -676,6 +682,107 @@ export default defineConfig(({ mode }) => {
                 sendJson(res, 401, { message: 'Unauthorized' });
                 return;
               }
+
+              // Handle sponsor upload requests
+              if (url.searchParams.get('action') === 'sponsor-upload') {
+                if (req.method !== 'POST') {
+                  sendJson(res, 405, { message: 'Method Not Allowed' });
+                  return;
+                }
+                try {
+                  const body = await readJsonBody(req);
+                  const { fileName, fileType } = body ?? {};
+                  if (!fileName || !fileType) {
+                    sendJson(res, 400, { message: 'fileName and fileType are required.' });
+                    return;
+                  }
+                  const extension = (() => {
+                    const fromName = String(fileName).split('.').pop();
+                    if (fromName && fromName !== fileName) return fromName.toLowerCase();
+                    const fromType = String(fileType).split('/').pop();
+                    if (fromType && fromType !== fileType) return fromType.toLowerCase();
+                    return 'jpg';
+                  })();
+                  const key = `sponsors/${crypto.randomUUID()}.${extension}`;
+                  const client = getS3Client();
+                  const command = new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: key,
+                    ContentType: fileType,
+                    CacheControl: 'public, max-age=31536000, immutable',
+                  });
+                  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+                  const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
+                  sendJson(res, 200, { uploadUrl, objectUrl, key });
+                } catch (error) {
+                  console.error('Sponsor upload error (dev):', error);
+                  sendJson(res, 500, { message: 'Unable to generate upload URL.' });
+                }
+                return;
+              }
+
+              // Handle sponsor CRUD requests
+              if (url.searchParams.get('action') === 'sponsors') {
+                try {
+                  if (req.method === 'GET') {
+                    const sponsors = await listSponsors();
+                    sendJson(res, 200, { sponsors });
+                    return;
+                  }
+
+                  if (req.method === 'POST') {
+                    const body = await readJsonBody(req);
+                    const { name, imageUrl, imageKey, url } = body ?? {};
+                    if (!name || !imageUrl) {
+                      sendJson(res, 400, { message: 'Name and logo image are required.' });
+                      return;
+                    }
+                    const sponsor = await createSponsor({
+                      name,
+                      imageUrl,
+                      imageKey,
+                      url,
+                    });
+                    sendJson(res, 201, { sponsor });
+                    return;
+                  }
+
+                  if (req.method === 'PUT') {
+                    const body = await readJsonBody(req);
+                    const { id, name, imageUrl, imageKey, url } = body ?? {};
+                    if (!id) {
+                      sendJson(res, 400, { message: 'Sponsor id is required.' });
+                      return;
+                    }
+                    const sponsor = await updateSponsor(id, {
+                      name,
+                      imageUrl,
+                      imageKey,
+                      url,
+                    });
+                    sendJson(res, 200, { sponsor });
+                    return;
+                  }
+
+                  if (req.method === 'DELETE') {
+                    const id = url.searchParams.get('id');
+                    if (!id) {
+                      sendJson(res, 400, { message: 'Sponsor id is required.' });
+                      return;
+                    }
+                    await deleteSponsor(id);
+                    sendJson(res, 200, { message: 'Sponsor deleted.' });
+                    return;
+                  }
+
+                  sendJson(res, 405, { message: 'Method Not Allowed' });
+                } catch (error) {
+                  console.error('Sponsors API error (dev):', error);
+                  sendJson(res, 500, { message: 'Internal server error' });
+                }
+                return;
+              }
+
               try {
                 if (req.method === 'GET') {
                   const slug = url.searchParams.get('slug');

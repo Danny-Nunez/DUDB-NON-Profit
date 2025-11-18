@@ -56,6 +56,11 @@ export const pageDefaults = {
         reactivationMessage:
           'This email previously unsubscribed. Please use a MailerLite form or contact us so we can re-add you.',
       },
+      sponsors: {
+        heading: 'Our Sponsors',
+        subtitle: 'Thank you to our generous partners who support our mission.',
+        sponsors: [],
+      },
     },
     es: {
       hero: {
@@ -103,6 +108,11 @@ export const pageDefaults = {
         reactivationTitle: 'Se requiere reactivación.',
         reactivationMessage:
           'Este correo se dio de baja previamente. Usa un formulario de MailerLite o contáctanos para volver a agregarte.',
+      },
+      sponsors: {
+        heading: 'Nuestros Patrocinadores',
+        subtitle: 'Gracias a nuestros generosos socios que apoyan nuestra misión.',
+        sponsors: [],
       },
     },
   },

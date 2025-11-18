@@ -35,6 +35,15 @@ interface BoardMember {
   es: BoardMemberCopy;
 }
 
+interface Sponsor {
+  id: string;
+  name: string;
+  imageUrl: string;
+  imageKey?: string;
+  url?: string;
+  createdAt: string;
+}
+
 interface EventRecord {
   id: string;
   folder: string;
@@ -124,6 +133,39 @@ const labels = {
         toastError: 'Something went wrong. Please try again.',
         previewAlt: 'Board member portrait preview',
         error: 'Unable to load board members. Please try again.',
+      },
+      sponsors: {
+        heading: 'Sponsors',
+        description:
+          'Manage sponsor logos displayed on the Home page. Upload logos and optionally add links to sponsor websites.',
+        jsonNotice:
+          'Sponsors are managed through the section below. Saving this page will automatically keep the latest sponsor updates.',
+        loading: 'Loading sponsors…',
+        empty: 'No sponsors yet.',
+        listTitle: 'Current Sponsors',
+        formTitle: 'Sponsor Details',
+        addSponsor: 'Add sponsor',
+        createTitle: 'Add Sponsor',
+        editTitle: 'Edit Sponsor',
+        uploadLabel: 'Upload Logo',
+        uploadHint: 'PNG or JPG, up to 5 MB. Transparent backgrounds work best.',
+        uploading: 'Uploading logo…',
+        uploadSuccess: 'Logo uploaded. Save to apply.',
+        uploadError: 'We could not upload the logo. Try again.',
+        nameLabel: 'Sponsor Name',
+        urlLabel: 'Website URL (optional)',
+        urlPlaceholder: 'https://example.com',
+        save: 'Save Sponsor',
+        cancel: 'Cancel',
+        edit: 'Edit',
+        delete: 'Delete',
+        confirmDelete: 'Are you sure you want to delete this sponsor?',
+        toastCreated: 'Sponsor added.',
+        toastUpdated: 'Sponsor updated.',
+        toastDeleted: 'Sponsor removed.',
+        toastError: 'Something went wrong. Please try again.',
+        previewAlt: 'Sponsor logo preview',
+        error: 'Unable to load sponsors. Please try again.',
       },
     },
     businesses: {
@@ -268,6 +310,39 @@ const labels = {
         toastError: 'Algo salió mal. Inténtalo nuevamente.',
         previewAlt: 'Vista previa del retrato del miembro de la junta',
         error: 'No pudimos cargar los miembros de la junta. Inténtalo nuevamente.',
+      },
+      sponsors: {
+        heading: 'Patrocinadores',
+        description:
+          'Administra los logos de patrocinadores que aparecen en la página de Inicio. Sube logos y opcionalmente agrega enlaces a sus sitios web.',
+        jsonNotice:
+          'Los patrocinadores se gestionan en la sección inferior. Al guardar la página se mantendrán automáticamente los últimos cambios en los patrocinadores.',
+        loading: 'Cargando patrocinadores…',
+        empty: 'Aún no hay patrocinadores.',
+        listTitle: 'Patrocinadores Actuales',
+        formTitle: 'Detalles del Patrocinador',
+        addSponsor: 'Agregar patrocinador',
+        createTitle: 'Agregar Patrocinador',
+        editTitle: 'Editar Patrocinador',
+        uploadLabel: 'Subir Logo',
+        uploadHint: 'PNG o JPG, hasta 5 MB. Los fondos transparentes funcionan mejor.',
+        uploading: 'Subiendo logo…',
+        uploadSuccess: 'Logo cargado. Guarda para aplicar.',
+        uploadError: 'No pudimos subir el logo. Inténtalo nuevamente.',
+        nameLabel: 'Nombre del Patrocinador',
+        urlLabel: 'URL del Sitio Web (opcional)',
+        urlPlaceholder: 'https://ejemplo.com',
+        save: 'Guardar Patrocinador',
+        cancel: 'Cancelar',
+        edit: 'Editar',
+        delete: 'Eliminar',
+        confirmDelete: '¿Seguro que deseas eliminar este patrocinador?',
+        toastCreated: 'Patrocinador agregado.',
+        toastUpdated: 'Patrocinador actualizado.',
+        toastDeleted: 'Patrocinador eliminado.',
+        toastError: 'Algo salió mal. Inténtalo nuevamente.',
+        previewAlt: 'Vista previa del logo del patrocinador',
+        error: 'No pudimos cargar los patrocinadores. Inténtalo nuevamente.',
       },
     },
     businesses: {
@@ -519,6 +594,7 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isAboutPage = selectedSlug === 'about';
+  const isHomePage = selectedSlug === 'home';
 
   const toEditorString = useCallback(
     (slug: PageSlug, raw: unknown) => {
@@ -530,6 +606,14 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
         }
         if (clone.es && typeof clone.es === 'object' && 'boardMembers' in clone.es) {
           delete clone.es.boardMembers;
+        }
+      }
+      if (slug === 'home' && clone && typeof clone === 'object') {
+        if (clone.en && typeof clone.en === 'object' && 'sponsors' in clone.en) {
+          delete clone.en.sponsors;
+        }
+        if (clone.es && typeof clone.es === 'object' && 'sponsors' in clone.es) {
+          delete clone.es.sponsors;
         }
       }
       return JSON.stringify(clone, null, 2);
@@ -648,6 +732,55 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           console.error('Failed to sync board members before saving', boardError);
         }
       }
+      if (isHomePage) {
+        try {
+          const sponsorResponse = await fetch('/api/admin/pages?action=sponsors', {
+            headers: authHeaders,
+          });
+          if (sponsorResponse.status === 401) {
+            onUnauthorized();
+            return;
+          }
+          if (sponsorResponse.ok) {
+            const data = (await sponsorResponse.json()) as { sponsors: Sponsor[] };
+            const sponsors = data.sponsors ?? [];
+            const homeContent = parsed as Record<string, unknown>;
+            const ensureLanguage = (locale: 'en' | 'es') => {
+              const current = homeContent[locale];
+              if (!current || typeof current !== 'object') {
+                // eslint-disable-next-line no-param-reassign
+                homeContent[locale] = {};
+              }
+              return homeContent[locale] as Record<string, unknown>;
+            };
+            const mapSponsors = () =>
+              sponsors.map((sponsor) => ({
+                id: sponsor.id,
+                name: sponsor.name,
+                imageUrl: sponsor.imageUrl,
+                imageKey: sponsor.imageKey ?? '',
+                url: sponsor.url ?? '',
+                createdAt: sponsor.createdAt,
+              }));
+            const enContent = ensureLanguage('en');
+            const esContent = ensureLanguage('es');
+            const sponsorsArray = mapSponsors();
+            const defaultSponsors = pageDefaults.home.en.sponsors;
+            enContent.sponsors = {
+              heading: defaultSponsors.heading,
+              subtitle: defaultSponsors.subtitle,
+              sponsors: sponsorsArray,
+            };
+            esContent.sponsors = {
+              heading: pageDefaults.home.es.sponsors.heading,
+              subtitle: pageDefaults.home.es.sponsors.subtitle,
+              sponsors: sponsorsArray,
+            };
+          }
+        } catch (sponsorError) {
+          console.error('Failed to sync sponsors before saving', sponsorError);
+        }
+      }
       const response = await fetch('/api/admin/pages', {
         method: 'PUT',
         headers: authHeaders,
@@ -708,6 +841,9 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
       {isAboutPage && (
         <p className="mt-2 text-xs text-[#d6b209]">{labels.boardMembers.jsonNotice}</p>
       )}
+      {isHomePage && (
+        <p className="mt-2 text-xs text-[#d6b209]">{labels.sponsors.jsonNotice}</p>
+      )}
 
       <textarea
         value={editorValue}
@@ -742,6 +878,16 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           onUnauthorized={onUnauthorized}
           labels={labels.boardMembers}
           onAfterChange={() => loadPage('about')}
+        />
+      )}
+
+      {isHomePage && (
+        <SponsorsManager
+          language={language}
+          authHeaders={authHeaders}
+          onUnauthorized={onUnauthorized}
+          labels={labels.sponsors}
+          onAfterChange={() => loadPage('home')}
         />
       )}
 
@@ -2409,6 +2555,400 @@ const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
             toast.type === 'success'
               ? 'bg-[#13223e]/90 border-[#d6b209]/40 text-[#e8e0b3]'
               : 'bg-[#3a1515]/90 border-[#ce1226]/40 text-[#f6c0c0]'
+          }`}
+        >
+          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+        </div>
+      )}
+    </section>
+  );
+};
+
+const createEmptySponsorForm = () => ({
+  name: '',
+  imageUrl: '',
+  imageKey: '',
+  url: '',
+});
+
+interface SponsorsManagerProps extends CommonProps {
+  labels: (typeof labels)['en']['pages']['sponsors'];
+  onAfterChange: () => void;
+}
+
+const SponsorsManager: React.FC<SponsorsManagerProps> = ({
+  language,
+  authHeaders,
+  onUnauthorized,
+  labels,
+  onAfterChange,
+}) => {
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formMode, setFormMode] = useState<FormMode>('create');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formValues, setFormValues] = useState(() => createEmptySponsorForm());
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const { toast, setToast } = useAutoDismissToast();
+
+  const fetchSponsors = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/admin/pages?action=sponsors', {
+        headers: authHeaders,
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to load sponsors');
+      }
+      const data = (await response.json()) as { sponsors: Sponsor[] };
+      setSponsors(data.sponsors ?? []);
+    } catch (err) {
+      console.error(err);
+      setError(labels.error);
+    } finally {
+      setLoading(false);
+    }
+  }, [authHeaders, labels.error, onUnauthorized]);
+
+  useEffect(() => {
+    void fetchSponsors();
+  }, [fetchSponsors]);
+
+  const resetForm = useCallback(() => {
+    setFormMode('create');
+    setEditingId(null);
+    setFormValues(createEmptySponsorForm());
+    setUploadStatus('idle');
+    setUploadError(null);
+  }, []);
+
+  const startEdit = (sponsor: Sponsor) => {
+    setFormMode('edit');
+    setEditingId(sponsor.id);
+    setFormValues({
+      name: sponsor.name,
+      imageUrl: sponsor.imageUrl,
+      imageKey: sponsor.imageKey ?? '',
+      url: sponsor.url ?? '',
+    });
+    setUploadStatus('idle');
+    setUploadError(null);
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadStatus('idle');
+    setUploadError(null);
+    try {
+      const response = await fetch('/api/admin/pages?action=sponsor-upload', {
+        method: 'POST',
+        headers: authHeaders,
+        body: JSON.stringify({ fileName: file.name, fileType: file.type }),
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to request upload URL');
+      }
+      const data = (await response.json()) as { uploadUrl: string; objectUrl: string; key: string };
+      const uploadResponse = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      if (!uploadResponse.ok) {
+        throw new Error('Upload to S3 failed');
+      }
+      setFormValues((previous) => ({
+        ...previous,
+        imageUrl: data.objectUrl,
+        imageKey: data.key,
+      }));
+      setUploadStatus('success');
+    } catch (err) {
+      console.error(err);
+      setUploadStatus('error');
+      setUploadError(labels.uploadError);
+    } finally {
+      setUploading(false);
+      input.value = '';
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!formValues.imageUrl) {
+      alert(language === 'en' ? 'Please upload a logo before saving.' : 'Por favor sube un logo antes de guardar.');
+      return;
+    }
+    if (!formValues.name.trim()) {
+      alert(language === 'en' ? 'Please enter a sponsor name.' : 'Por favor ingresa un nombre de patrocinador.');
+      return;
+    }
+    const payload = {
+      name: formValues.name.trim(),
+      imageUrl: formValues.imageUrl,
+      imageKey: formValues.imageKey || undefined,
+      url: formValues.url.trim() || undefined,
+    };
+    try {
+      const response = await fetch('/api/admin/pages?action=sponsors', {
+        method: formMode === 'edit' ? 'PUT' : 'POST',
+        headers: authHeaders,
+        body: JSON.stringify(
+          formMode === 'edit'
+            ? {
+                id: editingId,
+                ...payload,
+              }
+            : payload,
+        ),
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to save sponsor');
+      }
+      await fetchSponsors();
+      onAfterChange();
+      resetForm();
+      setToast({ message: formMode === 'edit' ? labels.toastUpdated : labels.toastCreated, type: 'success' });
+    } catch (err) {
+      console.error(err);
+      setToast({ message: labels.toastError, type: 'error' });
+    }
+  };
+
+  const handleDelete = async (sponsor: Sponsor) => {
+    if (!window.confirm(labels.confirmDelete)) return;
+    try {
+      const response = await fetch(`/api/admin/pages?action=sponsors&id=${encodeURIComponent(sponsor.id)}`, {
+        method: 'DELETE',
+        headers: authHeaders,
+      });
+      if (response.status === 401) {
+        onUnauthorized();
+        return;
+      }
+      if (!response.ok) {
+        throw new Error('Failed to delete sponsor');
+      }
+      await fetchSponsors();
+      onAfterChange();
+      setToast({ message: labels.toastDeleted, type: 'success' });
+    } catch (err) {
+      console.error(err);
+      setToast({ message: labels.toastError, type: 'error' });
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="mt-8 space-y-4 rounded-xl border border-gray-800 bg-black/40 p-5">
+        <p className="text-sm text-gray-400">{labels.loading}</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="mt-8 space-y-4 rounded-xl border border-red-900/40 bg-red-950/20 p-5">
+        <p className="text-sm text-red-400">{error}</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mt-8 space-y-6">
+      <div>
+        <h3 className="text-xl font-bold text-white">{labels.heading}</h3>
+        <p className="mt-1 text-sm text-gray-400">{labels.description}</p>
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="text-base font-semibold text-white">{labels.listTitle}</h4>
+        {sponsors.length === 0 ? (
+          <p className="text-sm text-gray-500">{labels.empty}</p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sponsors.map((sponsor) => (
+              <div
+                key={sponsor.id}
+                className="flex flex-col gap-4 rounded-xl border border-gray-800 bg-black/40 p-4 shadow-inner shadow-black/40"
+              >
+                <div className="flex-shrink-0">
+                  <div className="h-32 w-full overflow-hidden rounded-lg border border-[#012d62]/60 bg-[#012d62]/40">
+                    {sponsor.imageUrl ? (
+                      <img
+                        src={sponsor.imageUrl}
+                        alt={sponsor.name}
+                        crossOrigin="anonymous"
+                        className="h-full w-full object-contain"
+                        loading="lazy"
+                        onError={(e) => {
+                          console.error('Failed to load sponsor image:', sponsor.imageUrl);
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.error-message')) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'error-message flex h-full w-full items-center justify-center text-xs text-red-400';
+                            errorDiv.textContent = 'Failed to load';
+                            parent.appendChild(errorDiv);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">No logo</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2">
+                  <h5 className="text-lg font-semibold text-white">{sponsor.name}</h5>
+                  {sponsor.url && (
+                    <a
+                      href={sponsor.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-[#d6b209] hover:underline"
+                    >
+                      {sponsor.url}
+                    </a>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEdit(sponsor)}
+                      className="inline-flex min-w-[80px] items-center justify-center rounded-lg bg-[#012d62] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0b417f]"
+                    >
+                      {labels.edit}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(sponsor)}
+                      className="rounded-lg bg-[#ce1226] px-4 py-2 text-sm text-white transition hover:bg-[#a70e1f]"
+                    >
+                      {labels.delete}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <form className="space-y-4 rounded-xl border border-gray-800 bg-black/40 p-5" onSubmit={handleSubmit}>
+        <div className="space-y-1">
+          <h4 className="text-base font-semibold text-white">
+            {formMode === 'edit' ? labels.editTitle : labels.createTitle}
+          </h4>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] mb-2">
+              {labels.uploadLabel}
+            </label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={handleFileChange}
+              disabled={uploading}
+              className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-sm text-white file:mr-4 file:rounded-lg file:border-0 file:bg-[#d6b209] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-black hover:file:bg-[#b79807] disabled:opacity-60"
+            />
+            <p className="mt-1 text-xs text-gray-500">{labels.uploadHint}</p>
+            {uploading && <p className="mt-1 text-xs text-[#d6b209]">{labels.uploading}</p>}
+            {uploadStatus === 'success' && <p className="mt-1 text-xs text-[#6bc46d]">{labels.uploadSuccess}</p>}
+            {uploadStatus === 'error' && uploadError && <p className="mt-1 text-xs text-red-400">{uploadError}</p>}
+            {formValues.imageUrl && (
+              <div className="mt-3">
+                <p className="mb-2 text-xs text-gray-400">{labels.previewAlt}</p>
+                <div className="h-32 w-full overflow-hidden rounded-lg border border-[#012d62]/60 bg-[#012d62]/40">
+                  <img
+                    src={formValues.imageUrl}
+                    alt={labels.previewAlt}
+                    crossOrigin="anonymous"
+                    className="h-full w-full object-contain"
+                    onError={(e) => {
+                      console.error('Failed to load preview image:', formValues.imageUrl);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] mb-2">
+              {labels.nameLabel}
+            </label>
+            <input
+              type="text"
+              value={formValues.name}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, name: event.target.value }))}
+              required
+              className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] mb-2">
+              {labels.urlLabel}
+            </label>
+            <input
+              type="url"
+              value={formValues.url}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, url: event.target.value }))}
+              placeholder={labels.urlPlaceholder}
+              className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={uploading || !formValues.imageUrl || !formValues.name.trim()}
+            className="rounded-xl bg-[#d6b209] px-6 py-2 text-sm font-semibold text-black transition hover:bg-[#b79807] disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {labels.save}
+          </button>
+          {formMode === 'edit' && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="rounded-xl border border-gray-600 px-6 py-2 text-sm font-semibold text-gray-300 transition hover:bg-gray-800"
+            >
+              {labels.cancel}
+            </button>
+          )}
+        </div>
+      </form>
+
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
+            toast.type === 'success'
+              ? 'bg-[#13223e]/95 border-[#d6b209]/40 text-[#fef6cc]'
+              : 'bg-[#3a1515]/95 border-[#ce1226]/40 text-[#ffdada]'
           }`}
         >
           <span className="text-sm font-semibold tracking-wide">{toast.message}</span>

@@ -273,6 +273,72 @@ const HomePage: React.FC = () => {
           <p className="mt-6 text-xs text-gray-400">{copy.newsletter.privacy}</p>
         </div>
       </div>
+
+      {/* Sponsors Section */}
+      {(() => {
+        const sponsors = copy.sponsors?.sponsors;
+        console.log('HomePage sponsors check:', { 
+          hasSponsors: !!copy.sponsors, 
+          sponsorsCount: sponsors?.length ?? 0,
+          sponsors: sponsors 
+        });
+        return sponsors && sponsors.length > 0 ? (
+          <div className="bg-black py-16 sm:py-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-[#d6b209]">
+                  {copy.sponsors.heading}
+                </h2>
+                <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-400">{copy.sponsors.subtitle}</p>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-8 max-w-5xl mx-auto">
+                {sponsors.map((sponsor) => {
+                  console.log('Rendering sponsor:', sponsor);
+                  return (
+                    <div key={sponsor.id} className="flex items-center justify-center w-full sm:w-48 lg:w-56 h-32 p-4 bg-white/5 rounded-lg">
+                      {sponsor.url ? (
+                        <a
+                          href={sponsor.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full h-full hover:opacity-80 transition-opacity"
+                        >
+                          <img
+                            src={sponsor.imageUrl}
+                            alt={sponsor.name}
+                            className="w-full h-full object-contain max-h-full"
+                            onError={(e) => {
+                              console.error('Failed to load sponsor image:', sponsor.imageUrl, sponsor);
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                            onLoad={() => {
+                              console.log('Sponsor image loaded successfully:', sponsor.imageUrl);
+                            }}
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={sponsor.imageUrl}
+                          alt={sponsor.name}
+                          className="w-full h-full object-contain max-h-full"
+                          onError={(e) => {
+                            console.error('Failed to load sponsor image:', sponsor.imageUrl, sponsor);
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                          onLoad={() => {
+                            console.log('Sponsor image loaded successfully:', sponsor.imageUrl);
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : null;
+      })()}
+
       {toast && (
         <div
           className={`fixed bottom-6 right-6 z-40 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
