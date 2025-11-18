@@ -303,6 +303,45 @@ export default defineConfig(({ mode }) => {
                 sendJson(res, 401, { message: 'Unauthorized' });
                 return;
               }
+
+              // Handle upload requests
+              if (url.searchParams.get('action') === 'upload') {
+                if (req.method !== 'POST') {
+                  sendJson(res, 405, { message: 'Method Not Allowed' });
+                  return;
+                }
+                try {
+                  const body = await readJsonBody(req);
+                  const { fileName, fileType } = body ?? {};
+                  if (!fileName || !fileType) {
+                    sendJson(res, 400, { message: 'fileName and fileType are required.' });
+                    return;
+                  }
+                  const extension = (() => {
+                    const fromName = String(fileName).split('.').pop();
+                    if (fromName && fromName !== fileName) return fromName.toLowerCase();
+                    const fromType = String(fileType).split('/').pop();
+                    if (fromType && fromType !== fileType) return fromType.toLowerCase();
+                    return 'jpg';
+                  })();
+                  const key = `businesses/${crypto.randomUUID()}.${extension}`;
+                  const client = getS3Client();
+                  const command = new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: key,
+                    ContentType: fileType,
+                    CacheControl: 'public, max-age=31536000, immutable',
+                  });
+                  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+                  const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
+                  sendJson(res, 200, { uploadUrl, objectUrl, key });
+                } catch (error) {
+                  console.error('Business image upload error:', error);
+                  sendJson(res, 500, { message: 'Unable to generate upload URL.' });
+                }
+                return;
+              }
+
               try {
                 if (req.method === 'GET') {
                   const businesses = await listBusinesses();
@@ -355,6 +394,45 @@ export default defineConfig(({ mode }) => {
                 sendJson(res, 401, { message: 'Unauthorized' });
                 return;
               }
+
+              // Handle upload requests
+              if (url.searchParams.get('action') === 'upload') {
+                if (req.method !== 'POST') {
+                  sendJson(res, 405, { message: 'Method Not Allowed' });
+                  return;
+                }
+                try {
+                  const body = await readJsonBody(req);
+                  const { fileName, fileType } = body ?? {};
+                  if (!fileName || !fileType) {
+                    sendJson(res, 400, { message: 'fileName and fileType are required.' });
+                    return;
+                  }
+                  const extension = (() => {
+                    const fromName = String(fileName).split('.').pop();
+                    if (fromName && fromName !== fileName) return fromName.toLowerCase();
+                    const fromType = String(fileType).split('/').pop();
+                    if (fromType && fromType !== fileType) return fromType.toLowerCase();
+                    return 'jpg';
+                  })();
+                  const key = `boardmembers/${crypto.randomUUID()}.${extension}`;
+                  const client = getS3Client();
+                  const command = new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: key,
+                    ContentType: fileType,
+                    CacheControl: 'public, max-age=31536000, immutable',
+                  });
+                  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+                  const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
+                  sendJson(res, 200, { uploadUrl, objectUrl, key });
+                } catch (error) {
+                  console.error('Board member upload error (dev):', error);
+                  sendJson(res, 500, { message: 'Unable to generate upload URL.' });
+                }
+                return;
+              }
+
               try {
                 if (req.method === 'GET') {
                   const members = await listBoardMembers();
@@ -449,181 +527,95 @@ export default defineConfig(({ mode }) => {
               return;
             }
 
-            if (pathname === '/api/admin/board-members/upload') {
-              if (!isAdminAuthorized(req)) {
-                sendJson(res, 401, { message: 'Unauthorized' });
-                return;
-              }
-              if (req.method !== 'POST') {
-                sendJson(res, 405, { message: 'Method Not Allowed' });
-                return;
-              }
-              try {
-                const body = await readJsonBody(req);
-                const { fileName, fileType } = body ?? {};
-                if (!fileName || !fileType) {
-                  sendJson(res, 400, { message: 'fileName and fileType are required.' });
-                  return;
-                }
-                const extension = (() => {
-                  const fromName = String(fileName).split('.').pop();
-                  if (fromName && fromName !== fileName) return fromName.toLowerCase();
-                  const fromType = String(fileType).split('/').pop();
-                  if (fromType && fromType !== fileType) return fromType.toLowerCase();
-                  return 'jpg';
-                })();
-                const key = `boardmembers/${crypto.randomUUID()}.${extension}`;
-                const client = getS3Client();
-                const command = new PutObjectCommand({
-                  Bucket: S3_BUCKET,
-                  Key: key,
-                  ContentType: fileType,
-                  CacheControl: 'public, max-age=31536000, immutable',
-                });
-                const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
-                const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
-                sendJson(res, 200, { uploadUrl, objectUrl, key });
-              } catch (error) {
-                console.error('Board member upload error (dev):', error);
-                sendJson(res, 500, { message: 'Unable to generate upload URL.' });
-              }
-              return;
-            }
-
-            if (pathname === '/api/admin/businesses/upload') {
-              if (!isAdminAuthorized(req)) {
-                sendJson(res, 401, { message: 'Unauthorized' });
-                return;
-              }
-              if (req.method !== 'POST') {
-                sendJson(res, 405, { message: 'Method Not Allowed' });
-                return;
-              }
-              try {
-                const body = await readJsonBody(req);
-                const { fileName, fileType } = body ?? {};
-                if (!fileName || !fileType) {
-                  sendJson(res, 400, { message: 'fileName and fileType are required.' });
-                  return;
-                }
-                const extension = (() => {
-                  const fromName = String(fileName).split('.').pop();
-                  if (fromName && fromName !== fileName) return fromName.toLowerCase();
-                  const fromType = String(fileType).split('/').pop();
-                  if (fromType && fromType !== fileType) return fromType.toLowerCase();
-                  return 'jpg';
-                })();
-                const key = `businesses/${crypto.randomUUID()}.${extension}`;
-                const client = getS3Client();
-                const command = new PutObjectCommand({
-                  Bucket: S3_BUCKET,
-                  Key: key,
-                  ContentType: fileType,
-                  CacheControl: 'public, max-age=31536000, immutable',
-                });
-                const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
-                const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
-                sendJson(res, 200, { uploadUrl, objectUrl, key });
-              } catch (error) {
-                console.error('Business image upload error:', error);
-                sendJson(res, 500, { message: 'Unable to generate upload URL.' });
-              }
-              return;
-            }
-
-            if (pathname === '/api/admin/events/upload') {
-              if (!isAdminAuthorized(req)) {
-                sendJson(res, 401, { message: 'Unauthorized' });
-                return;
-              }
-              if (req.method !== 'POST') {
-                sendJson(res, 405, { message: 'Method Not Allowed' });
-                return;
-              }
-              try {
-                const body = await readJsonBody(req);
-                const { eventId, fileName, fileType } = body ?? {};
-                if (!eventId || !fileName || !fileType) {
-                  sendJson(res, 400, { message: 'eventId, fileName, and fileType are required.' });
-                  return;
-                }
-                const event = await getEventMetadata(eventId);
-                if (!event) {
-                  sendJson(res, 404, { message: 'Event not found.' });
-                  return;
-                }
-                const extension = (() => {
-                  const fromName = String(fileName).split('.').pop();
-                  if (fromName && fromName !== fileName) return fromName.toLowerCase();
-                  const fromType = String(fileType).split('/').pop();
-                  if (fromType && fromType !== fileType) return fromType.toLowerCase();
-                  return 'jpg';
-                })();
-                const safeFolder = event.folder.replace(/^\/+/, '').replace(/\/+$/u, '');
-                const key = `events/${safeFolder}/${crypto.randomUUID()}.${extension}`;
-                const client = getS3Client();
-                const command = new PutObjectCommand({
-                  Bucket: S3_BUCKET,
-                  Key: key,
-                  ContentType: fileType,
-                  CacheControl: 'public, max-age=31536000, immutable',
-                });
-                const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
-                const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
-                sendJson(res, 200, { uploadUrl, objectUrl, key });
-              } catch (error) {
-                console.error('Event image upload error:', error);
-                sendJson(res, 500, { message: 'Unable to generate upload URL.' });
-              }
-              return;
-            }
-
-            if (pathname === '/api/admin/events/delete-asset') {
-              if (!isAdminAuthorized(req)) {
-                sendJson(res, 401, { message: 'Unauthorized' });
-                return;
-              }
-              if (req.method !== 'POST') {
-                sendJson(res, 405, { message: 'Method Not Allowed' });
-                return;
-              }
-              try {
-                const body = await readJsonBody(req);
-                const { eventId, assetKey } = body ?? {};
-                if (!eventId || !assetKey) {
-                  sendJson(res, 400, { message: 'eventId and assetKey are required.' });
-                  return;
-                }
-                const event = await getEventMetadata(eventId);
-                if (!event) {
-                  sendJson(res, 404, { message: 'Event not found.' });
-                  return;
-                }
-                const safeFolder = event.folder.replace(/^\/+/, '').replace(/\/+$/u, '');
-                const normalizedKey =
-                  typeof assetKey === 'string' && assetKey.startsWith('events/')
-                    ? assetKey
-                    : `events/${safeFolder}/${assetKey}`;
-                const client = getS3Client();
-                await client.send(
-                  new DeleteObjectCommand({
-                    Bucket: S3_BUCKET,
-                    Key: normalizedKey,
-                  }),
-                );
-                sendJson(res, 200, { message: 'Asset deleted.' });
-              } catch (error) {
-                console.error('Event asset delete error:', error);
-                sendJson(res, 500, { message: 'Unable to delete asset.' });
-              }
-              return;
-            }
 
             if (pathname === '/api/admin/events') {
               if (!isAdminAuthorized(req)) {
                 sendJson(res, 401, { message: 'Unauthorized' });
                 return;
               }
+
+              // Handle upload requests
+              if (url.searchParams.get('action') === 'upload') {
+                if (req.method !== 'POST') {
+                  sendJson(res, 405, { message: 'Method Not Allowed' });
+                  return;
+                }
+                try {
+                  const body = await readJsonBody(req);
+                  const { eventId, fileName, fileType } = body ?? {};
+                  if (!eventId || !fileName || !fileType) {
+                    sendJson(res, 400, { message: 'eventId, fileName, and fileType are required.' });
+                    return;
+                  }
+                  const event = await getEventMetadata(eventId);
+                  if (!event) {
+                    sendJson(res, 404, { message: 'Event not found.' });
+                    return;
+                  }
+                  const extension = (() => {
+                    const fromName = String(fileName).split('.').pop();
+                    if (fromName && fromName !== fileName) return fromName.toLowerCase();
+                    const fromType = String(fileType).split('/').pop();
+                    if (fromType && fromType !== fileType) return fromType.toLowerCase();
+                    return 'jpg';
+                  })();
+                  const safeFolder = event.folder.replace(/^\/+/, '').replace(/\/+$/u, '');
+                  const key = `events/${safeFolder}/${crypto.randomUUID()}.${extension}`;
+                  const client = getS3Client();
+                  const command = new PutObjectCommand({
+                    Bucket: S3_BUCKET,
+                    Key: key,
+                    ContentType: fileType,
+                    CacheControl: 'public, max-age=31536000, immutable',
+                  });
+                  const uploadUrl = await getSignedUrl(client, command, { expiresIn: 60 });
+                  const objectUrl = `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com/${key}`;
+                  sendJson(res, 200, { uploadUrl, objectUrl, key });
+                } catch (error) {
+                  console.error('Event image upload error:', error);
+                  sendJson(res, 500, { message: 'Unable to generate upload URL.' });
+                }
+                return;
+              }
+
+              // Handle delete-asset requests
+              if (url.searchParams.get('action') === 'delete-asset') {
+                if (req.method !== 'POST') {
+                  sendJson(res, 405, { message: 'Method Not Allowed' });
+                  return;
+                }
+                try {
+                  const body = await readJsonBody(req);
+                  const { eventId, assetKey } = body ?? {};
+                  if (!eventId || !assetKey) {
+                    sendJson(res, 400, { message: 'eventId and assetKey are required.' });
+                    return;
+                  }
+                  const event = await getEventMetadata(eventId);
+                  if (!event) {
+                    sendJson(res, 404, { message: 'Event not found.' });
+                    return;
+                  }
+                  const safeFolder = event.folder.replace(/^\/+/, '').replace(/\/+$/u, '');
+                  const normalizedKey =
+                    typeof assetKey === 'string' && assetKey.startsWith('events/')
+                      ? assetKey
+                      : `events/${safeFolder}/${assetKey}`;
+                  const client = getS3Client();
+                  await client.send(
+                    new DeleteObjectCommand({
+                      Bucket: S3_BUCKET,
+                      Key: normalizedKey,
+                    }),
+                  );
+                  sendJson(res, 200, { message: 'Asset deleted.' });
+                } catch (error) {
+                  console.error('Event asset delete error:', error);
+                  sendJson(res, 500, { message: 'Unable to delete asset.' });
+                }
+                return;
+              }
+
               try {
                 if (req.method === 'GET') {
                   const id = url.searchParams.get('id');

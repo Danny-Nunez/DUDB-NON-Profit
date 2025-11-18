@@ -917,7 +917,7 @@ const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders
     setUploadError(null);
     setUploadStatus('idle');
     try {
-      const response = await fetch('/api/admin/businesses/upload', {
+      const response = await fetch('/api/admin/businesses?action=upload', {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({ fileName: file.name, fileType: file.type }),
@@ -1384,7 +1384,7 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnau
       [eventId]: { status: 'uploading' },
     }));
     try {
-      const response = await fetch('/api/admin/events/upload', {
+      const response = await fetch('/api/admin/events?action=upload', {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({ eventId, fileName: file.name, fileType: file.type }),
@@ -1442,7 +1442,7 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnau
       [deleteKey]: { status: 'uploading' },
     }));
     try {
-      const response = await fetch('/api/admin/events/delete-asset', {
+      const response = await fetch('/api/admin/events?action=delete-asset', {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({ eventId, assetKey }),
@@ -2102,7 +2102,7 @@ const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
     setUploadStatus('idle');
     setUploadError(null);
     try {
-      const response = await fetch('/api/admin/board-members/upload', {
+      const response = await fetch('/api/admin/board-members?action=upload', {
         method: 'POST',
         headers: authHeaders,
         body: JSON.stringify({ fileName: file.name, fileType: file.type }),
