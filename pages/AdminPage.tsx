@@ -41,6 +41,7 @@ interface Sponsor {
   imageUrl: string;
   imageKey?: string;
   url?: string;
+  featured?: boolean;
   createdAt: string;
 }
 
@@ -155,6 +156,8 @@ const labels = {
         nameLabel: 'Sponsor Name',
         urlLabel: 'Website URL (optional)',
         urlPlaceholder: 'https://example.com',
+        featuredLabel: 'Featured Sponsor',
+        featuredHint: 'Featured sponsors appear larger and above other sponsors on the homepage.',
         save: 'Save Sponsor',
         cancel: 'Cancel',
         edit: 'Edit',
@@ -332,6 +335,8 @@ const labels = {
         nameLabel: 'Nombre del Patrocinador',
         urlLabel: 'URL del Sitio Web (opcional)',
         urlPlaceholder: 'https://ejemplo.com',
+        featuredLabel: 'Patrocinador Destacado',
+        featuredHint: 'Los patrocinadores destacados aparecen más grandes y por encima de otros patrocinadores en la página de inicio.',
         save: 'Guardar Patrocinador',
         cancel: 'Cancelar',
         edit: 'Editar',
@@ -760,6 +765,7 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
                 imageUrl: sponsor.imageUrl,
                 imageKey: sponsor.imageKey ?? '',
                 url: sponsor.url ?? '',
+                featured: sponsor.featured ?? false,
                 createdAt: sponsor.createdAt,
               }));
             const enContent = ensureLanguage('en');
@@ -895,6 +901,16 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
       {errorMessage && <p className="text-sm text-[#ce1226]">{errorMessage}</p>}
     </section>
   );
+};
+
+// Helper function to proxy S3 images in development to avoid CORS issues
+const getImageUrl = (url: string | undefined): string => {
+  if (!url) return '';
+  // In development, proxy S3 images through the dev server
+  if (import.meta.env.DEV && url.includes('.s3.') && url.includes('.amazonaws.com')) {
+    return `/api/s3-proxy?url=${encodeURIComponent(url)}`;
+  }
+  return url;
 };
 
 interface BusinessesPanelProps extends CommonProps {
@@ -1171,7 +1187,7 @@ const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders
           {formValues.imageUrl && (
             <div className="md:col-span-2 flex items-center gap-4">
               <img
-                src={formValues.imageUrl}
+                src={getImageUrl(formValues.imageUrl)}
                 alt="Business preview"
                 className="h-16 w-16 rounded-lg border border-gray-700 object-cover"
               />
@@ -1250,7 +1266,7 @@ const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders
               >
                 <div className="h-20 w-20 rounded-lg overflow-hidden bg-[#012d62] flex-shrink-0">
                   <img
-                    src={business.imageUrl}
+                    src={getImageUrl(business.imageUrl)}
                     alt={business.name}
                     className="h-full w-full object-cover"
                     loading="lazy"
@@ -1970,7 +1986,7 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnau
                   {isVideoPreview ? (
                     <video src={assetUrl} className="h-48 w-full object-cover" muted playsInline controls />
                   ) : (
-                    <img src={assetUrl} alt={fileName ?? 'Preview'} className="h-48 w-full object-cover" />
+                    <img src={getImageUrl(assetUrl)} alt={fileName ?? 'Preview'} className="h-48 w-full object-cover" />
                   )}
                 </div>
               )}
@@ -2418,7 +2434,7 @@ const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
                 <div className="flex-shrink-0">
                   <div className="h-24 w-24 overflow-hidden rounded-full border border-[#012d62]/60 bg-[#012d62]/40">
                     {member.imageUrl ? (
-                      <img src={member.imageUrl} alt={member.primaryName} className="h-full w-full object-cover" loading="lazy" />
+                      <img src={getImageUrl(member.imageUrl)} alt={member.primaryName} className="h-full w-full object-cover" loading="lazy" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">No image</div>
                     )}
@@ -2569,6 +2585,7 @@ const createEmptySponsorForm = () => ({
   imageUrl: '',
   imageKey: '',
   url: '',
+  featured: false,
 });
 
 interface SponsorsManagerProps extends CommonProps {
@@ -2638,6 +2655,7 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
       imageUrl: sponsor.imageUrl,
       imageKey: sponsor.imageKey ?? '',
       url: sponsor.url ?? '',
+      featured: sponsor.featured ?? false,
     });
     setUploadStatus('idle');
     setUploadError(null);
@@ -2703,6 +2721,7 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
       imageUrl: formValues.imageUrl,
       imageKey: formValues.imageKey || undefined,
       url: formValues.url.trim() || undefined,
+      featured: formValues.featured ?? false,
     };
     try {
       const response = await fetch('/api/admin/pages?action=sponsors', {
@@ -2795,9 +2814,8 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
                   <div className="h-32 w-full overflow-hidden rounded-lg border border-[#012d62]/60 bg-[#012d62]/40">
                     {sponsor.imageUrl ? (
                       <img
-                        src={sponsor.imageUrl}
+                        src={getImageUrl(sponsor.imageUrl)}
                         alt={sponsor.name}
-                        crossOrigin="anonymous"
                         className="h-full w-full object-contain"
                         loading="lazy"
                         onError={(e) => {
@@ -2819,7 +2837,14 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
                   </div>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <h5 className="text-lg font-semibold text-white">{sponsor.name}</h5>
+                  <div className="flex items-center gap-2">
+                    <h5 className="text-lg font-semibold text-white">{sponsor.name}</h5>
+                    {sponsor.featured && (
+                      <span className="inline-flex items-center rounded-full bg-[#d6b209] px-2 py-0.5 text-xs font-semibold text-black">
+                        Featured
+                      </span>
+                    )}
+                  </div>
                   {sponsor.url && (
                     <a
                       href={sponsor.url}
@@ -2881,9 +2906,8 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
                 <p className="mb-2 text-xs text-gray-400">{labels.previewAlt}</p>
                 <div className="h-32 w-full overflow-hidden rounded-lg border border-[#012d62]/60 bg-[#012d62]/40">
                   <img
-                    src={formValues.imageUrl}
+                    src={getImageUrl(formValues.imageUrl)}
                     alt={labels.previewAlt}
-                    crossOrigin="anonymous"
                     className="h-full w-full object-contain"
                     onError={(e) => {
                       console.error('Failed to load preview image:', formValues.imageUrl);
@@ -2920,6 +2944,22 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
               placeholder={labels.urlPlaceholder}
               className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
             />
+          </div>
+
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="featured-sponsor"
+              checked={formValues.featured ?? false}
+              onChange={(event) => setFormValues((prev) => ({ ...prev, featured: event.target.checked }))}
+              className="mt-1 h-4 w-4 rounded border-[#012d62]/40 bg-black/70 text-[#d6b209] focus:ring-2 focus:ring-[#d6b209]/60"
+            />
+            <div className="flex-1">
+              <label htmlFor="featured-sponsor" className="block text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] mb-1 cursor-pointer">
+                {labels.featuredLabel}
+              </label>
+              <p className="text-xs text-gray-500">{labels.featuredHint}</p>
+            </div>
           </div>
         </div>
 

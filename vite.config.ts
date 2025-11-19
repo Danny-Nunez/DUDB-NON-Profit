@@ -2,7 +2,7 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import crypto from 'crypto';
-import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { listEventFolders } from './lib/s3Events';
 import { credentialsMatch, getAdminCredentials } from './lib/adminAuth';
@@ -99,6 +99,61 @@ export default defineConfig(({ mode }) => {
             if (!req.url) return next();
             const url = new URL(req.url, 'http://localhost');
             const { pathname } = url;
+
+            // Proxy S3 images to avoid CORS issues in development
+            if (pathname === '/api/s3-proxy') {
+              if (req.method && req.method !== 'GET') {
+                sendJson(res, 405, { message: 'Method Not Allowed' });
+                return;
+              }
+              try {
+                const imageUrl = url.searchParams.get('url');
+                if (!imageUrl) {
+                  sendJson(res, 400, { message: 'URL parameter is required.' });
+                  return;
+                }
+                
+                // Extract S3 key from URL
+                // Format: https://bucket.s3.region.amazonaws.com/key
+                const s3UrlPattern = new RegExp(`https://${S3_BUCKET}\\.s3\\.${S3_REGION}\\.amazonaws\\.com/(.+)`);
+                const match = imageUrl.match(s3UrlPattern);
+                if (!match) {
+                  sendJson(res, 400, { message: 'Invalid S3 URL.' });
+                  return;
+                }
+                
+                const key = decodeURIComponent(match[1]);
+                const client = getS3Client();
+                const command = new GetObjectCommand({
+                  Bucket: S3_BUCKET,
+                  Key: key,
+                });
+                
+                const response = await client.send(command);
+                if (!response.Body) {
+                  sendJson(res, 404, { message: 'Image not found.' });
+                  return;
+                }
+                
+                // Set appropriate headers
+                res.setHeader('Content-Type', response.ContentType || 'image/png');
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                
+                // Stream the image
+                const chunks: Uint8Array[] = [];
+                for await (const chunk of response.Body as any) {
+                  chunks.push(chunk);
+                }
+                const buffer = Buffer.concat(chunks);
+                res.statusCode = 200;
+                res.end(buffer);
+              } catch (error) {
+                console.error('S3 proxy error:', error);
+                sendJson(res, 500, { message: 'Failed to fetch image.' });
+              }
+              return;
+            }
 
             if (pathname === '/api/events') {
               if (req.method && req.method !== 'GET') {
@@ -732,7 +787,7 @@ export default defineConfig(({ mode }) => {
 
                   if (req.method === 'POST') {
                     const body = await readJsonBody(req);
-                    const { name, imageUrl, imageKey, url } = body ?? {};
+                    const { name, imageUrl, imageKey, url, featured } = body ?? {};
                     if (!name || !imageUrl) {
                       sendJson(res, 400, { message: 'Name and logo image are required.' });
                       return;
@@ -742,6 +797,7 @@ export default defineConfig(({ mode }) => {
                       imageUrl,
                       imageKey,
                       url,
+                      featured: typeof featured === 'boolean' ? featured : false,
                     });
                     sendJson(res, 201, { sponsor });
                     return;
@@ -749,7 +805,7 @@ export default defineConfig(({ mode }) => {
 
                   if (req.method === 'PUT') {
                     const body = await readJsonBody(req);
-                    const { id, name, imageUrl, imageKey, url } = body ?? {};
+                    const { id, name, imageUrl, imageKey, url, featured } = body ?? {};
                     if (!id) {
                       sendJson(res, 400, { message: 'Sponsor id is required.' });
                       return;
@@ -759,6 +815,7 @@ export default defineConfig(({ mode }) => {
                       imageUrl,
                       imageKey,
                       url,
+                      featured: typeof featured === 'boolean' ? featured : undefined,
                     });
                     sendJson(res, 200, { sponsor });
                     return;

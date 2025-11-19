@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       if (req.method === 'POST') {
-        const { name, imageUrl, imageKey, url } = (req.body ?? {}) as Record<string, unknown>;
+        const { name, imageUrl, imageKey, url, featured } = (req.body ?? {}) as Record<string, unknown>;
         if (!isNonEmpty(imageUrl) || !isNonEmpty(name)) {
           res.status(400).json({ message: 'Name and logo image are required.' });
           return;
@@ -85,13 +85,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl,
           imageKey: isNonEmpty(imageKey) ? imageKey : undefined,
           url: isNonEmpty(url) ? url : undefined,
+          featured: typeof featured === 'boolean' ? featured : false,
         });
         res.status(201).json({ sponsor });
         return;
       }
 
       if (req.method === 'PUT') {
-        const { id, name, imageUrl, imageKey, url } = (req.body ?? {}) as Record<string, unknown>;
+        const { id, name, imageUrl, imageKey, url, featured } = (req.body ?? {}) as Record<string, unknown>;
         if (!isNonEmpty(id)) {
           res.status(400).json({ message: 'Sponsor id is required.' });
           return;
@@ -101,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           imageUrl: isNonEmpty(imageUrl) ? imageUrl : undefined,
           imageKey: isNonEmpty(imageKey) ? imageKey : undefined,
           url: isNonEmpty(url) ? url : undefined,
+          featured: typeof featured === 'boolean' ? featured : undefined,
         });
         res.status(200).json({ sponsor });
         return;

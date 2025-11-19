@@ -10,6 +10,7 @@ type StoredSponsor = {
   imageUrl: string;
   imageKey?: string;
   url?: string;
+  featured?: boolean;
   createdAt?: string;
 };
 
@@ -32,6 +33,7 @@ export interface SponsorRecord {
   imageUrl: string;
   imageKey?: string;
   url?: string;
+  featured?: boolean;
   createdAt: string;
 }
 
@@ -40,6 +42,7 @@ export interface SponsorPayload {
   imageUrl?: string;
   imageKey?: string;
   url?: string;
+  featured?: boolean;
 }
 
 function deepClone<T>(value: T): T {
@@ -117,6 +120,7 @@ function normalizeSponsors(content: HomeContent): {
         imageUrl: typeof candidate.imageUrl === 'string' ? candidate.imageUrl : '',
         imageKey: typeof candidate.imageKey === 'string' ? candidate.imageKey : undefined,
         url: typeof candidate.url === 'string' && candidate.url.trim() ? candidate.url.trim() : undefined,
+        featured: typeof candidate.featured === 'boolean' ? candidate.featured : false,
         createdAt,
       } satisfies SponsorRecord;
     });
@@ -169,6 +173,7 @@ function normalizeSponsors(content: HomeContent): {
       imageUrl: record.imageUrl,
       imageKey: record.imageKey ?? undefined,
       url: record.url ?? undefined,
+      featured: record.featured ?? false,
       createdAt: record.createdAt,
     }));
     content.en.sponsors = {
@@ -206,6 +211,7 @@ function sanitizePayload(payload: SponsorPayload): SponsorPayload {
     imageUrl: payload.imageUrl,
     imageKey: payload.imageKey,
     url: payload.url && payload.url.trim() ? payload.url.trim() : undefined,
+    featured: payload.featured ?? false,
   };
 }
 
@@ -216,6 +222,7 @@ function applySponsorRecords(content: HomeContent, records: SponsorRecord[]) {
     imageUrl: record.imageUrl,
     imageKey: record.imageKey ?? undefined,
     url: record.url ?? undefined,
+    featured: record.featured ?? false,
     createdAt: record.createdAt,
   }));
   content.en.sponsors = {
@@ -251,6 +258,7 @@ export async function createSponsor(payload: SponsorPayload): Promise<SponsorRec
     imageUrl: sanitized.imageUrl!,
     imageKey: sanitized.imageKey,
     url: sanitized.url,
+    featured: sanitized.featured ?? false,
     createdAt,
   };
 
@@ -279,6 +287,7 @@ export async function updateSponsor(id: string, payload: SponsorPayload): Promis
     imageUrl: sanitized.imageUrl ?? existing.imageUrl,
     imageKey: sanitized.imageKey ?? existing.imageKey,
     url: sanitized.url ?? existing.url,
+    featured: sanitized.featured ?? existing.featured ?? false,
     createdAt: existing.createdAt,
   };
 
