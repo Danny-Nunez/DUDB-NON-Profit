@@ -5,7 +5,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { pageDefaults } from '../lib/pageDefaults';
 import { usePageContent } from '../hooks/usePageContent';
 
-const VIDEO_SOURCES = ['/dance.mp4', '/group.mp4'];
+const VIDEO_SOURCES = ['/dance.mp4', '/group.mp4', '/waving.mp4'];
 const FADE_DURATION_MS = 1500;
 
 const HomePage: React.FC = () => {
@@ -21,6 +21,7 @@ const HomePage: React.FC = () => {
   const [activeVideo, setActiveVideo] = useState(0);
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
   const previousVideoRef = useRef<number | null>(null);
+  const [firstVideoLoaded, setFirstVideoLoaded] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [newsletterError, setNewsletterError] = useState<string | null>(null);
@@ -167,6 +168,10 @@ const HomePage: React.FC = () => {
               key={src}
               ref={(element) => {
                 videoRefs.current[index] = element;
+                // For the first video, ensure first frame is shown when metadata loads
+                if (element && index === 0 && !firstVideoLoaded) {
+                  element.currentTime = 0;
+                }
               }}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] ease-in-out ${
                 activeVideo === index ? 'opacity-30' : 'opacity-0'
@@ -175,6 +180,17 @@ const HomePage: React.FC = () => {
               autoPlay
               muted
               playsInline
+              preload="metadata"
+              onLoadedMetadata={() => {
+                // Show first frame of first video immediately when metadata loads
+                if (index === 0 && !firstVideoLoaded) {
+                  const firstVideo = videoRefs.current[0];
+                  if (firstVideo) {
+                    firstVideo.currentTime = 0;
+                    setFirstVideoLoaded(true);
+                  }
+                }
+              }}
               onEnded={() => handleVideoEnd(index)}
             />
           ))}
