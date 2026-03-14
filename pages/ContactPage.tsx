@@ -6,7 +6,7 @@ import { usePageContent } from '../hooks/usePageContent';
 const ContactPage: React.FC = () => {
   const { language } = useLanguage();
   const defaultContent = pageDefaults.contact;
-  const { content } = usePageContent('contact', defaultContent);
+  const { content, isLoading } = usePageContent('contact', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
 
   const [formValues, setFormValues] = useState({
@@ -95,7 +95,11 @@ const ContactPage: React.FC = () => {
 
   return (
     <div className="bg-black text-gray-100 min-h-screen">
-      <div className="relative overflow-hidden">
+      <div
+        className={`relative overflow-hidden transition-opacity duration-500 ease-out ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-[#012d62]/40 via-black/60 to-black pointer-events-none"></div>
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center mb-12">

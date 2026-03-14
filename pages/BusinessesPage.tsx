@@ -20,7 +20,7 @@ interface Business {
 const BusinessesPage: React.FC = () => {
   const { language } = useLanguage();
   const defaultContent = pageDefaults.businesses;
-  const { content } = usePageContent('businesses', defaultContent);
+  const { content, isLoading: contentLoading } = usePageContent('businesses', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as { title: string; subtitle: string };
 
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -80,7 +80,15 @@ const BusinessesPage: React.FC = () => {
   }, []);
 
   return (
-    <PageWrapper title={copy.title} subtitle={copy.subtitle}>
+    <PageWrapper
+      title={contentLoading ? '' : copy.title}
+      subtitle={contentLoading ? '' : copy.subtitle}
+    >
+      <div
+        className={`transition-opacity duration-500 ease-out ${
+          contentLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
       {isLoading && (
         <div className="text-center text-gray-400 py-12">
           {language === 'en' ? 'Loading businesses…' : 'Cargando negocios…'}
@@ -121,6 +129,7 @@ const BusinessesPage: React.FC = () => {
           />
           );
         })}
+      </div>
       </div>
 
       {selectedBusiness && (

@@ -11,7 +11,7 @@ const FADE_DURATION_MS = 1500;
 const HomePage: React.FC = () => {
   const { language } = useLanguage();
   const defaultContent = pageDefaults.home;
-  const { content } = usePageContent('home', defaultContent);
+  const { content, isLoading: contentLoading } = usePageContent('home', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
   const defaultNewsletter = (defaultContent[language as keyof typeof defaultContent] as (typeof defaultContent)['en']).newsletter;
   const newsletterCopy = {
@@ -27,6 +27,22 @@ const HomePage: React.FC = () => {
   const [newsletterError, setNewsletterError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [newsletterResult, setNewsletterResult] = useState<'success' | 'already' | null>(null);
+  const [commitmentInView, setCommitmentInView] = useState(false);
+  const commitmentSectionRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = commitmentSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) setCommitmentInView(true);
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const handleVideoEnd = useCallback(
     (index: number) => {
@@ -159,9 +175,13 @@ const HomePage: React.FC = () => {
   );
 
   return (
-    <div className="text-white bg-black min-h-screen">
-      {/* Hero Section */}
-      <div className="relative bg-black overflow-hidden min-h-screen flex items-center">
+    <div
+      className={`text-white bg-black min-h-screen transition-opacity duration-500 ease-out ${
+        contentLoading ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
+      {/* Hero Section - extends behind nav (nav is h-20) */}
+      <div className="relative bg-black overflow-hidden min-h-screen flex items-center -mt-20 pt-20">
         <div className="absolute inset-0">
           {VIDEO_SOURCES.map((src, index) => (
             <video
@@ -227,8 +247,8 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="bg-black py-16 sm:py-24">
+      {/* Features Section - Our Commitment */}
+      <div ref={commitmentSectionRef} className="bg-black py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-[#d6b209]">
@@ -237,11 +257,17 @@ const HomePage: React.FC = () => {
             <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-400">{copy.featuresSubtitle}</p>
           </div>
           <div className="mt-12 grid gap-10 md:grid-cols-3">
-            {copy.features.map((feature) => (
-              <div key={feature.title} className="text-center p-6 bg-gray-900 rounded-lg border border-[#d6b209]/30">
+            {copy.features.map((feature, index) => (
+              <div
+                key={feature.title}
+                className={`text-center p-6 bg-gray-900 rounded-lg border border-[#d6b209]/30 transition-all duration-500 ease-out ${
+                  commitmentInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                }`}
+                style={{ transitionDelay: commitmentInView ? `${index * 120}ms` : '0ms' }}
+              >
                 <h3 className="text-xl font-bold text-[#d6b209]">{feature.title}</h3>
                 <p className="mt-2 text-gray-400">{feature.description}</p>
-            </div>
+              </div>
             ))}
           </div>
         </div>

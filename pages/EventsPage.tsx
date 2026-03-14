@@ -22,7 +22,7 @@ const EventsPage: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const defaults = pageDefaults.events;
-  const { content: pageCopy } = usePageContent('events', defaults);
+  const { content: pageCopy, isLoading: pageContentLoading } = usePageContent('events', defaults);
   const [events, setEvents] = useState<ApiEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +80,15 @@ const EventsPage: React.FC = () => {
   );
 
   return (
-    <PageWrapper title={copy.title} subtitle={copy.subtitle}>
+    <PageWrapper
+      title={pageContentLoading ? '' : copy.title}
+      subtitle={pageContentLoading ? '' : copy.subtitle}
+    >
+      <div
+        className={`transition-opacity duration-500 ease-out ${
+          pageContentLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
       {isLoading && (
         <div className="text-center text-gray-400 py-12">
           {language === 'en' ? 'Loading events…' : 'Cargando eventos…'}
@@ -114,6 +122,7 @@ const EventsPage: React.FC = () => {
           />
           );
         })}
+      </div>
       </div>
     </PageWrapper>
   );

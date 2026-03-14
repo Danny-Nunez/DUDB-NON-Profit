@@ -12,31 +12,16 @@ const AboutPage: React.FC = () => {
   const { content, isLoading } = usePageContent('about', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
 
-  if (isLoading) {
-    return (
-      <PageWrapper title="" subtitle="">
-        <div className="space-y-12 max-w-5xl mx-auto text-lg text-gray-300 animate-pulse">
-          <div className="bg-gray-900/60 border border-[#012d62]/30 backdrop-blur-sm p-8 rounded-2xl shadow-xl shadow-black/40">
-            <div className="h-8 bg-gray-700/50 rounded w-48 mb-4" />
-            <div className="h-4 bg-gray-700/50 rounded w-full max-w-2xl" />
-            <div className="h-4 bg-gray-700/50 rounded w-full max-w-xl mt-2" />
-          </div>
-          <div className="bg-gray-900/60 border border-[#ce1226]/30 backdrop-blur-sm p-8 rounded-2xl shadow-xl shadow-black/40">
-            <div className="h-8 bg-gray-700/50 rounded w-40 mb-4" />
-            <div className="h-4 bg-gray-700/50 rounded w-full max-w-2xl" />
-          </div>
-          <div className="bg-gray-900/60 border border-[#d6b209]/30 backdrop-blur-sm p-8 rounded-2xl shadow-xl shadow-black/40">
-            <div className="h-8 bg-gray-700/50 rounded w-44 mb-4" />
-            <div className="h-4 bg-gray-700/50 rounded w-full max-w-2xl" />
-          </div>
-        </div>
-      </PageWrapper>
-    );
-  }
-
   return (
-    <PageWrapper title={copy.title} subtitle={copy.subtitle}>
-      <div className="space-y-12 max-w-5xl mx-auto text-lg text-gray-300">
+    <PageWrapper
+      title={isLoading ? '' : copy.title}
+      subtitle={isLoading ? '' : copy.subtitle}
+    >
+      <div
+        className={`space-y-12 max-w-5xl mx-auto text-lg text-gray-300 transition-opacity duration-500 ease-out ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         <div className="bg-gray-900/60 border border-[#012d62]/30 backdrop-blur-sm p-8 rounded-2xl shadow-xl shadow-black/40">
           <h2 className="text-3xl font-bold text-[#1b68c1] mb-4 uppercase tracking-widest">{copy.missionTitle}</h2>
           <p className="font-bold">{copy.missionDescription}</p>

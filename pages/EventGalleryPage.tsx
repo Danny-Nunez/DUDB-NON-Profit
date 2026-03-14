@@ -112,7 +112,7 @@ const EventGalleryPage: React.FC = () => {
 
   const labels = copy[language];
   const defaults = pageDefaults.events;
-  const { content: pageCopy } = usePageContent('events', defaults);
+  const { content: pageCopy, isLoading: pageContentLoading } = usePageContent('events', defaults);
   const fallbackCopy = pageCopy[language as keyof typeof defaults] as {
     fallbackDescription: string;
   };
@@ -128,6 +128,11 @@ const EventGalleryPage: React.FC = () => {
 
   return (
     <PageWrapper title={title} subtitle={subtitle}>
+      <div
+        className={`transition-opacity duration-500 ease-out ${
+          pageContentLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Link
           to="/events"
@@ -210,6 +215,7 @@ const EventGalleryPage: React.FC = () => {
           })}
         </div>
       )}
+      </div>
 
       {selectedImage && event?.assets.some((asset) => asset.url === selectedImage) && (
         <div

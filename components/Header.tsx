@@ -1,8 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import { useLanguage } from '../contexts/LanguageContext';
+
+const SCROLL_THRESHOLD = 24;
 
 type NavKey = 'home' | 'about' | 'donate' | 'businesses' | 'events' | 'contact';
 
@@ -41,7 +43,18 @@ const languageOptions: Array<{ code: 'en' | 'es'; label: string }> = [
 
 const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { language, setLanguage } = useLanguage();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > SCROLL_THRESHOLD);
+    const raf = requestAnimationFrame(() => onScroll());
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
 
   const activeLinkStyle = {
     color: '#d6b209',
@@ -52,7 +65,11 @@ const Header: React.FC = () => {
   const mobileLinkClasses = "block px-3 py-2 rounded-md text-base font-medium text-gray-200 hover:text-white hover:bg-gray-700 transition-colors";
 
   return (
-    <nav className="bg-black/80 backdrop-blur-sm shadow-lg sticky top-0 z-50">
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ease-out ${
+        scrolled ? 'bg-black/80 backdrop-blur-sm shadow-lg' : 'bg-black/0 shadow-none backdrop-blur-none'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center">

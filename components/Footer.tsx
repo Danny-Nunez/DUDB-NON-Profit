@@ -7,7 +7,7 @@ import { usePageContent } from '../hooks/usePageContent';
 const Footer: React.FC = () => {
   const { language } = useLanguage();
   const defaultContent = pageDefaults.footer;
-  const { content } = usePageContent('footer', defaultContent);
+  const { content, isLoading } = usePageContent('footer', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as {
     tagline: string;
     socialLinks: { facebook: string; instagram: string; twitter: string };
@@ -15,7 +15,11 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="bg-black shadow-inner mt-12">
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div
+        className={`max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 transition-opacity duration-500 ease-out ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         <div className="flex justify-center space-x-6 text-gray-400 mb-4">
           <a
             href={copy.socialLinks.facebook}

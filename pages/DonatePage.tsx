@@ -11,11 +11,18 @@ const COLLECT_CHECKOUT_URL =
 const DonatePage: React.FC = () => {
   const { language } = useLanguage();
   const defaultContent = pageDefaults.donate;
-  const { content } = usePageContent('donate', defaultContent);
+  const { content, isLoading } = usePageContent('donate', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
   return (
-    <PageWrapper title={copy.title} subtitle={copy.subtitle}>
-      <div className="max-w-4xl mx-auto">
+    <PageWrapper
+      title={isLoading ? '' : copy.title}
+      subtitle={isLoading ? '' : copy.subtitle}
+    >
+      <div
+        className={`max-w-4xl mx-auto transition-opacity duration-500 ease-out ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         <div className="bg-gray-900 p-8 rounded-lg shadow-lg text-center">
           <h2 className="text-2xl font-bold text-white mb-4">{copy.whyHeading}</h2>
           <p className="text-lg text-gray-300 mb-6">{copy.whyDescription}</p>
