@@ -175,14 +175,14 @@ const HomePage: React.FC = () => {
   );
 
   return (
-    <div
-      className={`text-white bg-black min-h-screen transition-opacity duration-500 ease-out ${
-        contentLoading ? 'opacity-0' : 'opacity-100'
-      }`}
-    >
-      {/* Hero Section - extends behind nav (nav is h-20) */}
+    <div className="text-white bg-black min-h-screen">
+      {/* Hero Section - text shows first, video fades in when loaded */}
       <div className="relative bg-black overflow-hidden min-h-screen flex items-center -mt-20 pt-20">
-        <div className="absolute inset-0">
+        <div
+          className={`absolute inset-0 transition-opacity duration-700 ease-out ${
+            firstVideoLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
           {VIDEO_SOURCES.map((src, index) => (
             <video
               key={src}
@@ -222,7 +222,7 @@ const HomePage: React.FC = () => {
             }}
           ></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center py-24 sm:py-32 lg:py-40">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center py-24 sm:py-32 lg:py-40">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl drop-shadow-[0_6px_12px_rgba(0,0,0,0.65)]">
             <span className="block text-[#d6b209]">{copy.hero.lineOne}</span>
             <span className="block text-white">{copy.hero.lineTwo}</span>
@@ -247,6 +247,12 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Sections below hero fade in when page content is loaded */}
+      <div
+        className={`transition-opacity duration-500 ease-out ${
+          contentLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
       {/* Features Section - Our Commitment */}
       <div ref={commitmentSectionRef} className="bg-black py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -438,6 +444,7 @@ const HomePage: React.FC = () => {
           </div>
         );
       })()}
+      </div>
 
       {toast && (
         <div
