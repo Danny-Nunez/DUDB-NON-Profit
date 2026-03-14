@@ -47,26 +47,18 @@ const HomePage: React.FC = () => {
   const handleVideoEnd = useCallback(
     (index: number) => {
       previousVideoRef.current = index;
-      const nextIndex = (index + 1) % VIDEO_SOURCES.length;
-      setActiveVideo(nextIndex);
+      setActiveVideo((index + 1) % VIDEO_SOURCES.length);
     },
     [],
   );
 
   useEffect(() => {
     let resetTimeoutId: number | undefined;
-
     const currentVideo = videoRefs.current[activeVideo];
     if (currentVideo) {
       currentVideo.currentTime = 0;
-      const playPromise = currentVideo.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          /* Autoplay was prevented */
-        });
-      }
+      currentVideo.play().catch(() => {});
     }
-
     const previousIndex = previousVideoRef.current;
     if (previousIndex !== null && previousIndex !== activeVideo) {
       const previousVideo = videoRefs.current[previousIndex];
@@ -78,11 +70,8 @@ const HomePage: React.FC = () => {
         }, FADE_DURATION_MS);
       }
     }
-
     return () => {
-      if (resetTimeoutId !== undefined) {
-        window.clearTimeout(resetTimeoutId);
-      }
+      if (resetTimeoutId !== undefined) window.clearTimeout(resetTimeoutId);
     };
   }, [activeVideo]);
 
@@ -175,8 +164,8 @@ const HomePage: React.FC = () => {
   );
 
   return (
-    <div className="text-white bg-black min-h-screen">
-      {/* Hero Section - text shows first, video fades in when loaded */}
+    <div className="text-white min-h-screen bg-black">
+      {/* Hero Section - video and text scroll with page */}
       <div className="relative bg-black overflow-hidden min-h-screen flex items-center -mt-20 pt-20">
         <div
           className={`absolute inset-0 transition-opacity duration-700 ease-out ${
@@ -186,12 +175,9 @@ const HomePage: React.FC = () => {
           {VIDEO_SOURCES.map((src, index) => (
             <video
               key={src}
-              ref={(element) => {
-                videoRefs.current[index] = element;
-                // For the first video, ensure first frame is shown when metadata loads
-                if (element && index === 0 && !firstVideoLoaded) {
-                  element.currentTime = 0;
-                }
+              ref={(el) => {
+                videoRefs.current[index] = el;
+                if (el && index === 0 && !firstVideoLoaded) el.currentTime = 0;
               }}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] ease-in-out ${
                 activeVideo === index ? 'opacity-30' : 'opacity-0'
@@ -200,13 +186,12 @@ const HomePage: React.FC = () => {
               autoPlay
               muted
               playsInline
-              preload="metadata"
+              preload="auto"
               onLoadedMetadata={() => {
-                // Show first frame of first video immediately when metadata loads
-                if (index === 0 && !firstVideoLoaded) {
-                  const firstVideo = videoRefs.current[0];
-                  if (firstVideo) {
-                    firstVideo.currentTime = 0;
+                if (index === 0) {
+                  const first = videoRefs.current[0];
+                  if (first) {
+                    first.currentTime = 0;
                     setFirstVideoLoaded(true);
                   }
                 }
@@ -220,7 +205,7 @@ const HomePage: React.FC = () => {
               background:
                 'linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 45%, rgba(0, 0, 0, 0.2) 75%, rgba(0, 0, 0, 0) 100%)',
             }}
-          ></div>
+          />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center py-24 sm:py-32 lg:py-40">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl drop-shadow-[0_6px_12px_rgba(0,0,0,0.65)]">
