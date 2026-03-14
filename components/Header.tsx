@@ -67,7 +67,7 @@ const Header: React.FC = () => {
   return (
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ease-out ${
-        scrolled ? 'bg-black/80 backdrop-blur-sm shadow-lg' : 'bg-black/0 shadow-none backdrop-blur-none'
+        scrolled || isOpen ? 'bg-black/80 backdrop-blur-sm shadow-lg' : 'bg-black/0 shadow-none backdrop-blur-none'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -146,8 +146,11 @@ const Header: React.FC = () => {
       </div>
 
       {isOpen && (
-        <div className="md:hidden" id="mobile-menu">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div
+          className="md:hidden absolute top-20 left-0 right-0 bg-black shadow-xl"
+          id="mobile-menu"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-4 space-y-1">
             <div className="flex items-center justify-between px-1 pb-2">
               <span className="text-xs uppercase tracking-[0.4em] text-gray-500">
                 {language === 'en' ? 'Language' : 'Idioma'}
