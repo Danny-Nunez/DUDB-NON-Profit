@@ -11,7 +11,7 @@ const FADE_DURATION_MS = 1500;
 const HomePage: React.FC = () => {
   const { language } = useLanguage();
   const defaultContent = pageDefaults.home;
-  const { content, isLoading: contentLoading } = usePageContent('home', defaultContent);
+  const { content } = usePageContent('home', defaultContent);
   const copy = content[language as keyof typeof defaultContent] as (typeof defaultContent)['en'];
   const defaultNewsletter = (defaultContent[language as keyof typeof defaultContent] as (typeof defaultContent)['en']).newsletter;
   const newsletterCopy = {
@@ -232,12 +232,6 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Sections below hero fade in when page content is loaded */}
-      <div
-        className={`transition-opacity duration-500 ease-out ${
-          contentLoading ? 'opacity-0' : 'opacity-100'
-        }`}
-      >
       {/* Features Section - Our Commitment */}
       <div ref={commitmentSectionRef} className="bg-black py-16 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -429,7 +423,6 @@ const HomePage: React.FC = () => {
           </div>
         );
       })()}
-      </div>
 
       {toast && (
         <div
