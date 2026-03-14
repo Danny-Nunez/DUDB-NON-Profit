@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { PageSlug } from '../lib/pageDefaults';
 import { pageDefaults } from '../lib/pageDefaults';
@@ -72,6 +73,8 @@ const labels = {
     login: 'Sign In',
     logout: 'Sign out',
     invalidLogin: 'Invalid credentials. Please try again.',
+    loginSuccess: 'Signed in successfully.',
+    logoutSuccess: 'Signed out successfully.',
     loggedInAs: 'Logged in as',
     nav: {
       pages: 'Pages',
@@ -87,7 +90,6 @@ const labels = {
       saveSuccess: 'Page content saved.',
       saveError: 'Failed to save page content.',
       jsonInvalid: 'Content must be valid JSON.',
-      useDefaults: 'Load defaults',
       lastUpdated: 'Last updated',
       helper: 'Update both English (en) and Spanish (es) objects to keep translations in sync.',
       saveButton: 'Save Page',
@@ -251,6 +253,8 @@ const labels = {
     login: 'Ingresar',
     logout: 'Cerrar sesión',
     invalidLogin: 'Credenciales inválidas. Inténtalo nuevamente.',
+    loginSuccess: 'Sesión iniciada correctamente.',
+    logoutSuccess: 'Sesión cerrada correctamente.',
     loggedInAs: 'Sesión iniciada como',
     nav: {
       pages: 'Páginas',
@@ -266,7 +270,6 @@ const labels = {
       saveSuccess: 'Contenido guardado.',
       saveError: 'No se pudo guardar el contenido.',
       jsonInvalid: 'El contenido debe ser JSON válido.',
-      useDefaults: 'Cargar valores predeterminados',
       lastUpdated: 'Última actualización',
       helper: 'Actualiza los objetos en inglés (en) y español (es) para mantener las traducciones sincronizadas.',
       saveButton: 'Guardar Página',
@@ -442,10 +445,12 @@ const AdminPage: React.FC = () => {
   const { language } = useLanguage();
   const l10n = labels[language];
   const [activeTab, setActiveTab] = useState<AdminTab>('pages');
+  const { toast, setToast } = useAutoDismissToast();
 
   const [token, setToken] = useState<string | null>(() => sessionStorage.getItem(ADMIN_TOKEN_KEY));
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const authHeaders = useMemo(() => {
@@ -457,9 +462,10 @@ const AdminPage: React.FC = () => {
   }, [token]);
 
   const handleLogout = useCallback(() => {
+    setToast({ message: l10n.logoutSuccess, type: 'success' });
     sessionStorage.removeItem(ADMIN_TOKEN_KEY);
     setToken(null);
-  }, []);
+  }, [language, setToast]);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -478,6 +484,7 @@ const AdminPage: React.FC = () => {
 
       const { token: sessionToken } = (await response.json()) as { token: string };
       sessionStorage.setItem(ADMIN_TOKEN_KEY, sessionToken);
+      setToast({ message: l10n.loginSuccess, type: 'success' });
       setToken(sessionToken);
       setUsernameInput('');
       setPasswordInput('');
@@ -489,8 +496,17 @@ const AdminPage: React.FC = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-black text-gray-200 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-black text-gray-200 flex items-center justify-center px-4 relative">
         <div className="max-w-md w-full bg-gray-900 rounded-2xl shadow-xl p-8 border border-[#012d62]/30">
+          <div className="flex justify-center mb-6">
+            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[#d6b209]">
+              <img
+                src="/coat.svg"
+                alt="Dominicanos Unidos Baltimore"
+                className="h-12 w-12 object-contain"
+              />
+            </span>
+          </div>
           <h1 className="text-2xl font-bold text-white mb-6 text-center">{l10n.loginTitle}</h1>
           <form className="space-y-4" onSubmit={handleLogin}>
             <div>
@@ -508,12 +524,26 @@ const AdminPage: React.FC = () => {
               <label className="block text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] mb-2">
                 {l10n.password}
               </label>
-              <input
-                type="password"
-                value={passwordInput}
-                onChange={(event) => setPasswordInput(event.target.value)}
-                className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={passwordInput}
+                  onChange={(event) => setPasswordInput(event.target.value)}
+                  className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 pl-4 pr-12 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-gray-400 hover:text-[#d6b209] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" aria-hidden />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" aria-hidden />
+                  )}
+                </button>
+              </div>
             </div>
             {loginError && <p className="text-sm text-[#ce1226]">{loginError}</p>}
             <button
@@ -524,6 +554,17 @@ const AdminPage: React.FC = () => {
             </button>
           </form>
         </div>
+        {toast && (
+          <div
+            className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
+              toast.type === 'success'
+                ? 'bg-[#13223e]/95 border-[#d6b209]/40 text-[#fef6cc]'
+                : 'bg-[#3a1515]/95 border-[#ce1226]/40 text-[#ffdada]'
+            }`}
+          >
+            <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+          </div>
+        )}
       </div>
     );
   }
@@ -532,6 +573,7 @@ const AdminPage: React.FC = () => {
     language,
     authHeaders,
     onUnauthorized: handleLogout,
+    setToast,
   };
 
   return (
@@ -576,24 +618,333 @@ const AdminPage: React.FC = () => {
         {activeTab === 'businesses' && <BusinessesPanel {...commonProps} labels={l10n.businesses} />}
         {activeTab === 'events' && <EventsPanel {...commonProps} labels={l10n.events} />}
       </div>
+
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
+            toast.type === 'success'
+              ? 'bg-[#13223e]/95 border-[#d6b209]/40 text-[#fef6cc]'
+              : 'bg-[#3a1515]/95 border-[#ce1226]/40 text-[#ffdada]'
+          }`}
+        >
+          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 };
+
+type ToastSetter = (payload: { message: string; type: 'success' | 'error' }) => void;
 
 interface CommonProps {
   language: 'en' | 'es';
   authHeaders: Record<string, string | undefined>;
   onUnauthorized: () => void;
+  setToast: ToastSetter;
 }
 
 interface PagesPanelProps extends CommonProps {
   labels: (typeof labels)['en']['pages'];
 }
 
-const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauthorized, labels }) => {
+function getByPath(obj: unknown, path: string): unknown {
+  const parts = path.split('.');
+  let current: unknown = obj;
+  for (const part of parts) {
+    if (current == null || typeof current !== 'object') return undefined;
+    const key = /^\d+$/.test(part) ? parseInt(part, 10) : part;
+    current = (current as Record<string, unknown>)[key as string];
+  }
+  return current;
+}
+
+function setByPath(obj: unknown, path: string, value: unknown): unknown {
+  const parts = path.split('.');
+  if (parts.length === 0) return value;
+  if (parts.length === 1) {
+    if (typeof obj !== 'object' || obj === null) return value;
+    const key = /^\d+$/.test(parts[0]) ? parseInt(parts[0], 10) : parts[0];
+    const out = Array.isArray(obj) ? [...obj] : { ...(obj as Record<string, unknown>) };
+    (out as Record<string, unknown>)[key as string] = value;
+    return out;
+  }
+  const [head, ...rest] = parts;
+  const restPath = rest.join('.');
+  const parent = obj as Record<string, unknown>;
+  const child = /^\d+$/.test(head) ? parent[parseInt(head, 10)] : parent[head];
+  const newChild = setByPath(child, restPath, value);
+  const out = Array.isArray(parent) ? [...parent] : { ...parent };
+  (out as Record<string, unknown>)[/^\d+$/.test(head) ? parseInt(head, 10) : head] = newChild;
+  return out;
+}
+
+function deepMergeInto(target: Record<string, unknown>, defaults: Record<string, unknown>): void {
+  for (const key of Object.keys(defaults)) {
+    const defVal = defaults[key];
+    const tgtVal = target[key];
+    if (defVal !== null && typeof defVal === 'object' && !Array.isArray(defVal) && tgtVal !== null && typeof tgtVal === 'object' && !Array.isArray(tgtVal)) {
+      deepMergeInto(tgtVal as Record<string, unknown>, defVal as Record<string, unknown>);
+    } else if (target[key] === undefined) {
+      target[key] = JSON.parse(JSON.stringify(defVal));
+    }
+  }
+}
+
+function toContentObject(slug: PageSlug, raw: unknown): Record<string, unknown> {
+  const fallback = pageDefaults[slug];
+  const clone = JSON.parse(JSON.stringify(raw ?? fallback)) as Record<string, unknown>;
+  const defaultShape = JSON.parse(JSON.stringify(fallback)) as Record<string, unknown>;
+  deepMergeInto(clone, defaultShape);
+  if (slug === 'about' && clone.en && typeof clone.en === 'object' && 'boardMembers' in clone.en) {
+    const en = clone.en as Record<string, unknown>;
+    delete en.boardMembers;
+  }
+  if (slug === 'about' && clone.es && typeof clone.es === 'object' && 'boardMembers' in clone.es) {
+    const es = clone.es as Record<string, unknown>;
+    delete es.boardMembers;
+  }
+  if (slug === 'home' && clone.en && typeof clone.en === 'object' && 'sponsors' in clone.en) {
+    const en = clone.en as Record<string, unknown>;
+    delete en.sponsors;
+  }
+  if (slug === 'home' && clone.es && typeof clone.es === 'object' && 'sponsors' in clone.es) {
+    const es = clone.es as Record<string, unknown>;
+    delete es.sponsors;
+  }
+  return clone;
+}
+
+const SECTION_LABELS: Record<string, string> = {
+  hero: 'Hero',
+  newsletter: 'Newsletter',
+  features: 'Our Commitment',
+  sponsors: 'Sponsors',
+  boardMembers: 'Board Members',
+  tiers: 'Donation Tiers',
+  form: 'Contact Form',
+  infoLabels: 'Info Labels',
+  infoValues: 'Info Values',
+  socialLinks: 'Social Links',
+};
+
+/** Groups of flat keys per page so they render in bordered section cards like Hero. */
+const PAGE_SECTION_GROUPS: Partial<Record<PageSlug, { title: string; keys: string[] }[]>> = {
+  about: [
+    { title: 'Page Header', keys: ['title', 'subtitle'] },
+    { title: 'Mission', keys: ['missionTitle', 'missionDescription'] },
+    { title: 'Vision', keys: ['visionTitle', 'visionDescription'] },
+    { title: 'History', keys: ['historyTitle', 'historyDescription'] },
+    { title: 'Leadership', keys: ['leadershipTag', 'boardHeading', 'boardDescription'] },
+  ],
+  donate: [
+    { title: 'Page Header', keys: ['title', 'subtitle'] },
+    { title: 'Why Donate', keys: ['whyHeading', 'whyDescription'] },
+    { title: 'Closing', keys: ['closing', 'donateButton', 'donateHelper'] },
+  ],
+  businesses: [{ title: 'Page Content', keys: ['title', 'subtitle'] }],
+  events: [{ title: 'Page Content', keys: ['title', 'subtitle', 'fallbackDescription'] }],
+  contact: [
+    { title: 'Page Header', keys: ['title', 'subtitle'] },
+    { title: 'Intro', keys: ['infoTitle', 'infoDescription', 'infoFollow'] },
+  ],
+  footer: [{ title: 'Tagline', keys: ['tagline'] }],
+};
+
+function StructuredContentEditor({
+  content,
+  onChange,
+  path = '',
+  disabled = false,
+  slug,
+  hideLabel = false,
+}: {
+  content: unknown;
+  onChange: (path: string, value: unknown) => void;
+  path?: string;
+  disabled?: boolean;
+  slug?: PageSlug;
+  hideLabel?: boolean;
+}) {
+  const pathParts = path ? path.split('.') : [];
+  const isSectionLevel = pathParts.length === 2 && (pathParts[0] === 'en' || pathParts[0] === 'es');
+  const sectionKey = isSectionLevel ? pathParts[1] : '';
+  const sectionTitle = sectionKey ? (SECTION_LABELS[sectionKey] ?? sectionKey.replace(/([A-Z])/g, ' $1').trim()) : '';
+
+  if (content === null || content === undefined) return null;
+  if (typeof content === 'string') {
+    const isLong = content.length > 80;
+    const label = path.split('.').pop() ?? path;
+    const labelDisplay = (label as string).replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase());
+    const inputClass = 'w-full rounded-lg border border-[#012d62]/40 bg-black/70 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60 disabled:opacity-60 disabled:cursor-not-allowed';
+    return (
+      <div key={path} className={`space-y-1 rounded-lg border border-[#012d62]/20 bg-black/30 p-3 ${hideLabel ? 'pt-2' : ''}`}>
+        {!hideLabel && (
+          <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider">
+            {labelDisplay}
+          </label>
+        )}
+        {isLong ? (
+          <textarea
+            value={content}
+            onChange={(e) => onChange(path, e.target.value)}
+            disabled={disabled}
+            rows={3}
+            className={inputClass}
+          />
+        ) : (
+          <input
+            type="text"
+            value={content}
+            onChange={(e) => onChange(path, e.target.value)}
+            disabled={disabled}
+            className={inputClass}
+          />
+        )}
+      </div>
+    );
+  }
+  if (typeof content === 'number') {
+    return (
+      <div key={path} className="space-y-1 rounded-lg border border-[#012d62]/20 bg-black/30 p-3">
+        <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider">{path.split('.').pop()}</label>
+        <input
+          type="number"
+          value={content}
+          onChange={(e) => onChange(path, e.target.value === '' ? 0 : Number(e.target.value))}
+          disabled={disabled}
+          className="w-full rounded-lg border border-[#012d62]/40 bg-black/70 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+        />
+      </div>
+    );
+  }
+  if (typeof content === 'boolean') {
+    return (
+      <div key={path} className="flex items-center gap-2 rounded-lg border border-[#012d62]/20 bg-black/30 p-3">
+        <input
+          type="checkbox"
+          checked={content}
+          onChange={(e) => onChange(path, e.target.checked)}
+          disabled={disabled}
+          className="rounded border-[#012d62]/40 bg-black/70 text-[#d6b209] focus:ring-[#d6b209]/60 disabled:opacity-60 disabled:cursor-not-allowed"
+        />
+        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{path.split('.').pop()}</span>
+      </div>
+    );
+  }
+  if (Array.isArray(content)) {
+    return (
+      <div key={path} className={`space-y-4 ${isSectionLevel ? 'rounded-xl border-2 border-[#d6b209]/50 bg-gray-900/60 p-5 shadow-lg' : ''}`}>
+        {isSectionLevel && (
+          <div className="text-base font-bold text-[#d6b209] uppercase tracking-wider px-2 -mt-1 mb-2 block border-b border-[#d6b209]/30 pb-2">
+            {sectionTitle}
+          </div>
+        )}
+        <div className={isSectionLevel ? 'space-y-4' : 'space-y-4'}>
+          {content.map((item, index) => (
+            <fieldset key={`${path}.${index}`} className="rounded-xl border border-[#012d62]/30 p-4 space-y-3">
+              <legend className="text-sm font-semibold text-[#d6b209] px-2">
+                {path ? `${path.split('.').pop()} — ${index + 1}` : `Item ${index + 1}`}
+              </legend>
+              <StructuredContentEditor
+                content={item}
+                path={path ? `${path}.${index}` : String(index)}
+                onChange={onChange}
+                disabled={disabled}
+                slug={slug}
+              />
+            </fieldset>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  if (typeof content === 'object') {
+    const obj = content as Record<string, unknown>;
+    let keys = Object.keys(obj).filter((k) => typeof obj[k] === 'string' || typeof obj[k] === 'number' || typeof obj[k] === 'boolean' || (typeof obj[k] === 'object' && obj[k] !== null && !Array.isArray(obj[k])) || Array.isArray(obj[k]));
+    const isLocaleLevel = path === 'en' || path === 'es';
+    if (isLocaleLevel) {
+      keys = keys.includes('hero') ? ['hero', ...keys.filter((k) => k !== 'hero')] : keys;
+    }
+
+    const localeLabels: Record<string, string> = { en: 'English', es: 'Español' };
+    const groups = slug ? PAGE_SECTION_GROUPS[slug] : undefined;
+    const keysInGroups = groups ? new Set(groups.flatMap((g) => g.keys)) : new Set<string>();
+    const keysNotInGroups = keys.filter((k) => !keysInGroups.has(k));
+
+    const renderKey = (key: string) => {
+      const legendLabel = localeLabels[key] ?? key.replace(/([A-Z])/g, ' $1').trim();
+      const childPath = path ? `${path}.${key}` : key;
+      const val = obj[key];
+      const isChildSection =
+        isLocaleLevel &&
+        (keysInGroups.has(key) ||
+          (typeof val === 'object' && val !== null));
+      const sectionBorderClass = isChildSection
+        ? 'rounded-xl border-2 border-[#d6b209]/50 bg-gray-900/60 p-5 space-y-4 shadow-lg'
+        : 'rounded-xl border border-[#012d62]/20 p-4 space-y-3';
+      const sectionHeaderClass = isChildSection
+        ? 'text-base font-bold text-[#d6b209] uppercase tracking-wider px-2 -mt-1 mb-3 block border-b border-[#d6b209]/30 pb-2'
+        : 'text-sm font-semibold text-gray-300 px-2 capitalize';
+      const childSectionTitle = isChildSection ? (SECTION_LABELS[key] ?? key.replace(/([A-Z])/g, ' $1').trim()) : legendLabel;
+      return (
+        <fieldset key={key} className={sectionBorderClass}>
+          <legend className={sectionHeaderClass}>{childSectionTitle}</legend>
+          <StructuredContentEditor
+            content={obj[key]}
+            path={childPath}
+            onChange={onChange}
+            disabled={disabled}
+            slug={slug}
+          />
+        </fieldset>
+      );
+    };
+
+    return (
+      <div key={path} className="space-y-6">
+        {groups && isLocaleLevel
+          ? groups.map((group) => (
+              <fieldset
+                key={group.title}
+                className="rounded-xl border-2 border-[#d6b209]/50 bg-gray-900/60 p-5 space-y-4 shadow-lg"
+              >
+                <legend className="text-base font-bold text-[#d6b209] uppercase tracking-wider px-2 -mt-1 mb-3 block border-b border-[#d6b209]/30 pb-2">
+                  {group.title}
+                </legend>
+                <div className="space-y-4">
+                  {group.keys
+                    .filter((k) => obj[k] !== undefined)
+                    .map((k) => (
+                      <StructuredContentEditor
+                        key={k}
+                        content={obj[k]}
+                        path={path ? `${path}.${k}` : k}
+                        onChange={onChange}
+                        disabled={disabled}
+                        slug={slug}
+                        hideLabel={group.keys.length === 1 && (typeof obj[k] === 'string' || typeof obj[k] === 'number')}
+                      />
+                    ))}
+                </div>
+              </fieldset>
+            ))
+          : null}
+        {keysNotInGroups.map((key) => renderKey(key))}
+      </div>
+    );
+  }
+  return null;
+}
+
+type EditorLocale = 'en' | 'es';
+
+const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauthorized, setToast, labels }) => {
   const [availableSlugs, setAvailableSlugs] = useState<PageSlug[]>(DEFAULT_PAGE_SLUGS);
   const [selectedSlug, setSelectedSlug] = useState<PageSlug>('home');
-  const [editorValue, setEditorValue] = useState<string>('');
+  const [editorLocale, setEditorLocale] = useState<EditorLocale>('en');
+  const [contentObject, setContentObject] = useState<Record<string, unknown> | null>(null);
+  const [lastSavedContent, setLastSavedContent] = useState<Record<string, unknown> | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -601,30 +952,9 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
   const isAboutPage = selectedSlug === 'about';
   const isHomePage = selectedSlug === 'home';
 
-  const toEditorString = useCallback(
-    (slug: PageSlug, raw: unknown) => {
-      const fallback = pageDefaults[slug];
-      const clone = JSON.parse(JSON.stringify(raw ?? fallback));
-      if (slug === 'about' && clone && typeof clone === 'object') {
-        if (clone.en && typeof clone.en === 'object' && 'boardMembers' in clone.en) {
-          delete clone.en.boardMembers;
-        }
-        if (clone.es && typeof clone.es === 'object' && 'boardMembers' in clone.es) {
-          delete clone.es.boardMembers;
-        }
-      }
-      if (slug === 'home' && clone && typeof clone === 'object') {
-        if (clone.en && typeof clone.en === 'object' && 'sponsors' in clone.en) {
-          delete clone.en.sponsors;
-        }
-        if (clone.es && typeof clone.es === 'object' && 'sponsors' in clone.es) {
-          delete clone.es.sponsors;
-        }
-      }
-      return JSON.stringify(clone, null, 2);
-    },
-    [],
-  );
+  const handleContentChange = useCallback((path: string, value: unknown) => {
+    setContentObject((prev) => (prev ? (setByPath(prev, path, value) as Record<string, unknown>) : null));
+  }, []);
 
   const loadSlugs = useCallback(async () => {
     try {
@@ -660,9 +990,11 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           return;
         }
         if (response.status === 404) {
-          const defaults = pageDefaults[slug];
-          setEditorValue(toEditorString(slug, defaults));
+          const content = toContentObject(slug, pageDefaults[slug]);
+          setContentObject(content);
+          setLastSavedContent(JSON.parse(JSON.stringify(content)));
           setUpdatedAt(null);
+          setIsEditing(false);
           setIsLoading(false);
           return;
         }
@@ -670,18 +1002,23 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           throw new Error(labels.loadError);
         }
         const data = (await response.json()) as { content: unknown; updatedAt?: string };
-        setEditorValue(toEditorString(slug, data.content ?? pageDefaults[slug]));
+        const content = toContentObject(slug, data.content ?? pageDefaults[slug]);
+        setContentObject(content);
+        setLastSavedContent(JSON.parse(JSON.stringify(content)));
         setUpdatedAt(data.updatedAt ?? null);
+        setIsEditing(false);
       } catch (error) {
         console.error(error);
         setErrorMessage(labels.loadError);
-        setEditorValue(toEditorString(slug, pageDefaults[slug]));
+        const content = toContentObject(slug, pageDefaults[slug]);
+        setContentObject(content);
+        setLastSavedContent(JSON.parse(JSON.stringify(content)));
         setUpdatedAt(null);
       } finally {
         setIsLoading(false);
       }
     },
-    [authHeaders, labels.loadError, onUnauthorized, toEditorString],
+    [authHeaders, labels.loadError, onUnauthorized],
   );
 
   useEffect(() => {
@@ -695,8 +1032,13 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
   const handleSave = async () => {
     setStatusMessage(null);
     setErrorMessage(null);
+    if (!contentObject) {
+      setErrorMessage(labels.loadError);
+      setToast({ message: labels.saveError, type: 'error' });
+      return;
+    }
     try {
-      const parsed = JSON.parse(editorValue);
+      const parsed = JSON.parse(JSON.stringify(contentObject)) as Record<string, unknown>;
       if (isAboutPage) {
         try {
           const boardResponse = await fetch('/api/admin/board-members', {
@@ -801,13 +1143,18 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
       }
       const data = (await response.json()) as { updatedAt?: string };
       setUpdatedAt(data.updatedAt ?? new Date().toISOString());
+      setLastSavedContent(JSON.parse(JSON.stringify(contentObject)));
+      setIsEditing(false);
       setStatusMessage(labels.saveSuccess);
+      setToast({ message: labels.saveSuccess, type: 'success' });
     } catch (error) {
       console.error(error);
       if (error instanceof SyntaxError) {
         setErrorMessage(labels.jsonInvalid);
+        setToast({ message: labels.jsonInvalid, type: 'error' });
       } else {
         setErrorMessage(labels.saveError);
+        setToast({ message: labels.saveError, type: 'error' });
       }
     }
   };
@@ -819,29 +1166,20 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
         <p className="text-sm text-gray-400">{labels.description}</p>
       </header>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex flex-col text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] gap-2">
-          {labels.selectLabel}
-          <select
-            value={selectedSlug}
-            onChange={(event) => setSelectedSlug(event.target.value as PageSlug)}
-            className="rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
-          >
-            {availableSlugs.map((slug) => (
-              <option key={slug} value={slug}>
-                {labels.slugLabels[slug] ?? slug}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button
-          type="button"
-          onClick={() => setEditorValue(toEditorString(selectedSlug, pageDefaults[selectedSlug]))}
-          className="self-start rounded-xl border border-[#d6b209]/50 px-4 py-2 text-sm font-semibold text-[#d6b209] hover:bg-[#d6b209]/10 transition"
+      <label className="flex flex-col text-sm font-semibold text-[#d6b209] uppercase tracking-[0.25em] gap-2">
+        {labels.selectLabel}
+        <select
+          value={selectedSlug}
+          onChange={(event) => setSelectedSlug(event.target.value as PageSlug)}
+          className="rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60 max-w-xs"
         >
-          {labels.useDefaults}
-        </button>
-      </div>
+          {availableSlugs.map((slug) => (
+            <option key={slug} value={slug}>
+              {labels.slugLabels[slug] ?? slug}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <p className="text-xs uppercase tracking-[0.3em] text-gray-500">{labels.helper}</p>
       {isAboutPage && (
@@ -851,30 +1189,93 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
         <p className="mt-2 text-xs text-[#d6b209]">{labels.sponsors.jsonNotice}</p>
       )}
 
-      <textarea
-        value={editorValue}
-        onChange={(event) => setEditorValue(event.target.value)}
-        rows={24}
-        className="w-full rounded-xl border border-[#012d62]/40 bg-black/70 px-4 py-3 text-sm font-mono text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#d6b209]/60"
-      />
+      {!contentObject ? (
+        <p className="text-sm text-gray-500 py-4">{language === 'en' ? 'Loading…' : 'Cargando…'}</p>
+      ) : (
+        <div className="space-y-6">
+          <p className="text-xs uppercase tracking-wider text-gray-500">
+            {language === 'en' ? 'Editing' : 'Editando'}: <span className="text-[#d6b209] font-semibold">{labels.slugLabels[selectedSlug] ?? selectedSlug}</span>
+            {selectedSlug === 'home' && (
+              <span className="ml-2 text-gray-400 normal-case">({language === 'en' ? 'Hero is the first section below' : 'Hero es la primera sección abajo'})</span>
+            )}
+          </p>
+          <div className="flex rounded-xl border border-[#012d62]/40 bg-black/50 p-1 gap-0">
+            <button
+              type="button"
+              onClick={() => setEditorLocale('en')}
+              className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                editorLocale === 'en'
+                  ? 'bg-[#d6b209] text-black'
+                  : 'text-gray-400 hover:text-white hover:bg-[#012d62]/30'
+              }`}
+            >
+              English
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditorLocale('es')}
+              className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
+                editorLocale === 'es'
+                  ? 'bg-[#d6b209] text-black'
+                  : 'text-gray-400 hover:text-white hover:bg-[#012d62]/30'
+              }`}
+            >
+              Español
+            </button>
+          </div>
+          <div className="rounded-xl border border-[#012d62]/30 bg-black/40 p-4 max-h-[60vh] overflow-y-auto space-y-4">
+            <StructuredContentEditor
+              content={(contentObject[editorLocale] as Record<string, unknown>) ?? {}}
+              path={editorLocale}
+              onChange={(path, value) => handleContentChange(path, value)}
+              disabled={!isEditing}
+              slug={selectedSlug}
+            />
+          </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          type="button"
-          onClick={handleSave}
-          className="rounded-xl bg-[#d6b209] text-black font-semibold px-6 py-3 hover:bg-[#b79807] transition disabled:opacity-50"
-          disabled={isLoading}
-        >
-          {isLoading ? (language === 'en' ? 'Saving…' : 'Guardando…') : labels.saveButton}
-        </button>
-        <div className="text-sm text-gray-500">
-          {updatedAt && (
-            <span>
-              {labels.lastUpdated}:{' '}
-              {new Date(updatedAt).toLocaleString(language === 'en' ? 'en-US' : 'es-DO')}
-            </span>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {!isEditing ? (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="rounded-xl bg-[#d6b209] text-black font-semibold px-6 py-3 hover:bg-[#b79807] transition"
+              >
+                {language === 'en' ? 'Edit content' : 'Editar contenido'}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="rounded-xl bg-[#d6b209] text-black font-semibold px-6 py-3 hover:bg-[#b79807] transition disabled:opacity-50"
+                >
+                  {isLoading ? (language === 'en' ? 'Saving…' : 'Guardando…') : labels.saveButton}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (lastSavedContent) setContentObject(JSON.parse(JSON.stringify(lastSavedContent)));
+                    setIsEditing(false);
+                  }}
+                  className="rounded-xl border border-[#012d62]/50 text-gray-300 font-semibold px-6 py-3 hover:bg-[#012d62]/30 transition"
+                >
+                  {language === 'en' ? 'Cancel' : 'Cancelar'}
+                </button>
+              </>
+            )}
+          </div>
+
         </div>
+      )}
+
+      <div className="text-sm text-gray-500">
+        {updatedAt && (
+          <span>
+            {labels.lastUpdated}:{' '}
+            {new Date(updatedAt).toLocaleString(language === 'en' ? 'en-US' : 'es-DO')}
+          </span>
+        )}
       </div>
 
       {isAboutPage && (
@@ -882,6 +1283,7 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           language={language}
           authHeaders={authHeaders}
           onUnauthorized={onUnauthorized}
+          setToast={setToast}
           labels={labels.boardMembers}
           onAfterChange={() => loadPage('about')}
         />
@@ -892,6 +1294,7 @@ const PagesPanel: React.FC<PagesPanelProps> = ({ language, authHeaders, onUnauth
           language={language}
           authHeaders={authHeaders}
           onUnauthorized={onUnauthorized}
+          setToast={setToast}
           labels={labels.sponsors}
           onAfterChange={() => loadPage('home')}
         />
@@ -917,7 +1320,7 @@ interface BusinessesPanelProps extends CommonProps {
   labels: (typeof labels)['en']['businesses'];
 }
 
-const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders, onUnauthorized, labels }) => {
+const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders, onUnauthorized, setToast, labels }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -937,7 +1340,6 @@ const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDirectoryVisible, setIsDirectoryVisible] = useState<boolean>(false);
-  const { toast, setToast } = useAutoDismissToast();
 
   const fetchBusinesses = useCallback(async () => {
     setLoading(true);
@@ -1318,17 +1720,6 @@ const BusinessesPanel: React.FC<BusinessesPanelProps> = ({ language, authHeaders
         </>
       )}
 
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border ${
-            toast.type === 'success'
-              ? 'bg-[#13223e]/90 border-[#d6b209]/40 text-[#e8e0b3]'
-              : 'bg-[#3a1515]/90 border-[#ce1226]/40 text-[#f6c0c0]'
-          }`}
-        >
-          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
-        </div>
-      )}
     </section>
   );
 };
@@ -1351,7 +1742,7 @@ interface EventsPanelProps extends CommonProps {
   labels: (typeof labels)['en']['events'];
 }
 
-const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnauthorized, labels }) => {
+const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnauthorized, setToast, labels }) => {
   const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -1369,7 +1760,6 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnau
   const [pendingDeletion, setPendingDeletion] = useState<{ eventId: string; assetKey: string } | null>(null);
   const [isDirectoryVisible, setIsDirectoryVisible] = useState<boolean>(true);
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
-  const { toast, setToast } = useAutoDismissToast();
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
@@ -2015,17 +2405,6 @@ const EventsPanel: React.FC<EventsPanelProps> = ({ language, authHeaders, onUnau
         );
       })()}
 
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border ${
-            toast.type === 'success'
-              ? 'bg-[#13223e]/90 border-[#d6b209]/40 text-[#e8e0b3]'
-              : 'bg-[#3a1515]/90 border-[#ce1226]/40 text-[#f6c0c0]'
-          }`}
-        >
-          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
-        </div>
-      )}
     </section>
   );
 };
@@ -2193,6 +2572,7 @@ const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
   language,
   authHeaders,
   onUnauthorized,
+  setToast,
   labels,
   onAfterChange,
 }) => {
@@ -2205,7 +2585,6 @@ const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const { toast, setToast } = useAutoDismissToast();
 
   const fetchMembers = useCallback(async () => {
     setLoading(true);
@@ -2564,18 +2943,6 @@ const BoardMembersManager: React.FC<BoardMembersManagerProps> = ({
           </div>
         </form>
       </div>
-
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border ${
-            toast.type === 'success'
-              ? 'bg-[#13223e]/90 border-[#d6b209]/40 text-[#e8e0b3]'
-              : 'bg-[#3a1515]/90 border-[#ce1226]/40 text-[#f6c0c0]'
-          }`}
-        >
-          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
-        </div>
-      )}
     </section>
   );
 };
@@ -2597,6 +2964,7 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
   language,
   authHeaders,
   onUnauthorized,
+  setToast,
   labels,
   onAfterChange,
 }) => {
@@ -2609,7 +2977,6 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
   const [uploading, setUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const { toast, setToast } = useAutoDismissToast();
 
   const fetchSponsors = useCallback(async () => {
     setLoading(true);
@@ -2982,18 +3349,6 @@ const SponsorsManager: React.FC<SponsorsManagerProps> = ({
           )}
         </div>
       </form>
-
-      {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 shadow-xl border transition-opacity duration-300 ${
-            toast.type === 'success'
-              ? 'bg-[#13223e]/95 border-[#d6b209]/40 text-[#fef6cc]'
-              : 'bg-[#3a1515]/95 border-[#ce1226]/40 text-[#ffdada]'
-          }`}
-        >
-          <span className="text-sm font-semibold tracking-wide">{toast.message}</span>
-        </div>
-      )}
     </section>
   );
 };
