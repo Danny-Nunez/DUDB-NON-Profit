@@ -29,6 +29,10 @@ const HomePage: React.FC = () => {
   const [newsletterResult, setNewsletterResult] = useState<'success' | 'already' | null>(null);
   const [commitmentInView, setCommitmentInView] = useState(false);
   const commitmentSectionRef = useRef<HTMLDivElement | null>(null);
+  const regularSponsors = useMemo(
+    () => (copy.sponsors?.sponsors ?? []).filter((s: { featured?: boolean }) => !s.featured),
+    [copy.sponsors?.sponsors],
+  );
 
   useEffect(() => {
     const el = commitmentSectionRef.current;
@@ -259,7 +263,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Newsletter Section */}
-      <div className="bg-gradient-to-br from-[#020817] via-black to-[#012d62] py-16 sm:py-24">
+      <div className="py-16 sm:py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-xs uppercase tracking-[0.4em] text-[#d6b209]">{copy.newsletter.eyebrow}</p>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-white">{copy.newsletter.heading}</h2>
@@ -304,16 +308,8 @@ const HomePage: React.FC = () => {
       {/* Sponsors Section */}
       {(() => {
         const sponsors = copy.sponsors?.sponsors;
-        console.log('HomePage sponsors check:', { 
-          hasSponsors: !!copy.sponsors, 
-          sponsorsCount: sponsors?.length ?? 0,
-          sponsors: sponsors 
-        });
         if (!sponsors || sponsors.length === 0) return null;
-        
         const featuredSponsors = sponsors.filter((sponsor) => sponsor.featured);
-        const regularSponsors = sponsors.filter((sponsor) => !sponsor.featured);
-        
         return (
           <div className="bg-black py-16 sm:py-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -323,63 +319,13 @@ const HomePage: React.FC = () => {
                 </h2>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-400">{copy.sponsors.subtitle}</p>
               </div>
-              
+
               {/* Featured Sponsors */}
               {featuredSponsors.length > 0 && (
                 <div className="mb-12">
                   <div className="flex flex-wrap items-center justify-center gap-8 max-w-6xl mx-auto">
-                    {featuredSponsors.map((sponsor) => {
-                      console.log('Rendering featured sponsor:', sponsor);
-                      return (
-                        <div key={sponsor.id} className="flex items-center justify-center w-full sm:w-64 lg:w-80 h-40 sm:h-48 p-6 bg-stone-950 rounded-lg ">
-                          {sponsor.url ? (
-                            <a
-                              href={sponsor.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block w-full h-full hover:opacity-80 transition-opacity"
-                            >
-                              <img
-                                src={sponsor.imageUrl}
-                                alt={sponsor.name}
-                                className="w-full h-full object-contain max-h-full"
-                                onError={(e) => {
-                                  console.error('Failed to load sponsor image:', sponsor.imageUrl, sponsor);
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                                onLoad={() => {
-                                  console.log('Sponsor image loaded successfully:', sponsor.imageUrl);
-                                }}
-                              />
-                            </a>
-                          ) : (
-                            <img
-                              src={sponsor.imageUrl}
-                              alt={sponsor.name}
-                              className="w-full h-full object-contain max-h-full"
-                              onError={(e) => {
-                                console.error('Failed to load sponsor image:', sponsor.imageUrl, sponsor);
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                              onLoad={() => {
-                                console.log('Sponsor image loaded successfully:', sponsor.imageUrl);
-                              }}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              
-              {/* Regular Sponsors */}
-              {regularSponsors.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-8 max-w-5xl mx-auto">
-                  {regularSponsors.map((sponsor) => {
-                    console.log('Rendering sponsor:', sponsor);
-                    return (
-                      <div key={sponsor.id} className="flex items-center justify-center w-full sm:w-48 lg:w-56 h-32 p-4 bg-white/5 rounded-lg">
+                    {featuredSponsors.map((sponsor) => (
+                      <div key={sponsor.id} className="flex items-center justify-center w-full sm:w-64 lg:w-80 h-40 sm:h-48 p-6 bg-stone-950 rounded-lg">
                         {sponsor.url ? (
                           <a
                             href={sponsor.url}
@@ -392,11 +338,7 @@ const HomePage: React.FC = () => {
                               alt={sponsor.name}
                               className="w-full h-full object-contain max-h-full"
                               onError={(e) => {
-                                console.error('Failed to load sponsor image:', sponsor.imageUrl, sponsor);
                                 (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                              onLoad={() => {
-                                console.log('Sponsor image loaded successfully:', sponsor.imageUrl);
                               }}
                             />
                           </a>
@@ -406,20 +348,90 @@ const HomePage: React.FC = () => {
                             alt={sponsor.name}
                             className="w-full h-full object-contain max-h-full"
                             onError={(e) => {
-                              console.error('Failed to load sponsor image:', sponsor.imageUrl, sponsor);
                               (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                            onLoad={() => {
-                              console.log('Sponsor image loaded successfully:', sponsor.imageUrl);
                             }}
                           />
                         )}
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               )}
+
             </div>
+
+            {/* Regular Sponsors – continuous scroller with edge fades */}
+            {regularSponsors.length > 0 && (
+              <>
+                <style>{`
+                  @keyframes sponsor-scroll {
+                    from { transform: translateX(0); }
+                    to { transform: translateX(-50%); }
+                  }
+                  .animate-sponsor-scroll {
+                    animation: sponsor-scroll 40s linear infinite;
+                  }
+                  .animate-sponsor-scroll:hover {
+                    animation-play-state: paused;
+                  }
+                `}</style>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  <div className="relative">
+                    <div className="overflow-hidden">
+                      <div className="flex items-center gap-12 md:gap-16 animate-sponsor-scroll w-max">
+                        {[...regularSponsors, ...regularSponsors].map((sponsor, index) => (
+                          <div
+                            key={`${sponsor.id}-${index}`}
+                            className="flex-shrink-0 flex items-center justify-center w-32 sm:w-40 md:w-48 h-20 sm:h-24 p-4 bg-white/5 rounded-lg"
+                          >
+                            {sponsor.url ? (
+                              <a
+                                href={sponsor.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full h-full hover:opacity-80 transition-opacity flex items-center justify-center"
+                              >
+                                <img
+                                  src={sponsor.imageUrl}
+                                  alt={sponsor.name}
+                                  className="max-w-full max-h-full w-auto h-auto object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              </a>
+                            ) : (
+                              <img
+                                src={sponsor.imageUrl}
+                                alt={sponsor.name}
+                                className="max-w-full max-h-full w-auto h-auto object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Left edge fade */}
+                    <div
+                      className="absolute left-0 top-0 bottom-0 w-16 sm:w-24 z-10 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(to right, rgb(0 0 0) 0%, rgba(0,0,0,0) 100%)',
+                      }}
+                    />
+                    {/* Right edge fade */}
+                    <div
+                      className="absolute right-0 top-0 bottom-0 w-16 sm:w-24 z-10 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(to left, rgb(0 0 0) 0%, rgba(0,0,0,0) 100%)',
+                      }}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         );
       })()}
